@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class EmployerServiceImpl implements EmployeeServiceI {
 
  private final EmployerProfileRepository employerProfileRepository;
-    // private final UserRepository userRepository;
+    private final UserRepository userRepository;
     // private final CompanyRepository companyRepository;
 
 
@@ -64,6 +64,42 @@ public class EmployerServiceImpl implements EmployeeServiceI {
 
         return mapToEmployerProfileDTO(profile);
     }
+
+    @Override
+@Transactional
+public void deleteEmployerById(Long employerId) {
+    // 1) Get the logged-in admin
+        User currentAdmin = SecurityUtils.getCurrentUser();
+        if (currentAdmin == null || !currentAdmin.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        // 2) Load the target user
+        User toDelete = userRepository.findById(employerId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + employerId));
+
+        // 3) Make sure they’re actually an EMPLOYER (not another ADMIN or CANDIDATE)
+        if (!toDelete.getRole().equals(UserRole.EMPLOYER)) {
+            throw new IllegalStateException("You can only delete employers.");
+        }
+
+        // 4) COMPANY-ID check: only allow if they belong to the same company
+        Long adminCompanyId  = currentAdmin.getCompany().getId();
+        Long targetCompanyId = toDelete.getCompany().getId();
+        if (!adminCompanyId.equals(targetCompanyId)) {
+            throw new AccessDeniedException("Cannot delete employer outside your company");
+        }
+
+        // 5) Delete their profile (if you don’t have a JPA cascade)
+        employerProfileRepository.findByUserId(employerId)
+            .ifPresent(employerProfileRepository::delete);
+
+        // 6) (Later) delete jobs they created…
+
+        // 7) Finally, delete the User row
+        userRepository.delete(toDelete);
+}
+
 
     private EmployerProfileDTO mapToEmployerProfileDTO(EmployerProfile profile) {
         EmployerProfileDTO dto = new EmployerProfileDTO();

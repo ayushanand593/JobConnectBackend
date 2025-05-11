@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -80,4 +82,11 @@ public class EmployerController {
         EmployerProfileDTO updatedProfile = employerService.updateProfile(dto);
        return ResponseEntity.ok(updatedProfile);
     }
+
+    @DeleteMapping("/delete/{employerId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    public ResponseEntity<?> deleteEmployer(@PathVariable Long employerId) {
+    employerService.deleteEmployerById(employerId);
+    return ResponseEntity.ok("Employer deleted successfully.");
+}
 }

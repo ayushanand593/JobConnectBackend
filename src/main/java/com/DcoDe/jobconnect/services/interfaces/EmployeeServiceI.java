@@ -7,4 +7,7 @@ public interface EmployeeServiceI {
     EmployerProfileDTO getCurrentEmployerProfile();
 
     EmployerProfileDTO updateProfile(EmployerProfileUpdateDTO dto);
+
+    void deleteEmployerById(Long employerId);
+
 }

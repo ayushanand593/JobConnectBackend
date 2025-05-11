@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class Job {
     private JobType jobType;
 
     @Column(name = "experience_required")
-    private String experienceRequired;
+    private String experienceLevel;
 
     @Column(nullable = false)
     private String description;
@@ -71,9 +72,13 @@ public class Job {
             joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
+     @ToString.Exclude  // Add this annotation to prevent issues with toString()
+    @EqualsAndHashCode.Exclude  // Add this to prevent issues with equals/hashCode
     private Set<Skill> skills = new HashSet<>();
 
     @OneToMany(mappedBy = "job")
+      @ToString.Exclude  // Add this to prevent issues with toString()
+    @EqualsAndHashCode.Exclude  // Add this to prevent issues with equals/hashCode
     private List<JobApplication> applications = new ArrayList<>();
 
     @PrePersist

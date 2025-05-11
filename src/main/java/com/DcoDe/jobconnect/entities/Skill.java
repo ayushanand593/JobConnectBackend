@@ -3,7 +3,9 @@ package com.DcoDe.jobconnect.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +23,8 @@ public class Skill {
     private String name;
 
     @ManyToMany(mappedBy = "skills")
+      @ToString.Exclude  // Prevent circular toString() calls
+    @EqualsAndHashCode.Exclude  // Prevent circular equals/hashCode calls
     private Set<Job> jobs = new HashSet<>();
 
     @ManyToMany(mappedBy = "skills")

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
+import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
 import com.DcoDe.jobconnect.dto.SkillDTO;
 import com.DcoDe.jobconnect.entities.Candidate;
@@ -102,6 +103,69 @@ public class CandidateServiceImpl implements CandidateServiceI {
         Candidate candidate = candidateRepository.findByIdWithSkills(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Candidate not found with ID: " + id));
         return mapToCandidateProfileDTO(candidate);
+    }
+
+    @Override
+@Transactional
+public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO profileDTO) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authenticated");
+    }
+
+    Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+
+    // Update candidate details
+    candidate.setFirstName(profileDTO.getFirstName());
+    candidate.setLastName(profileDTO.getLastName());
+    candidate.setPhone(profileDTO.getPhone());
+    candidate.setHeadline(profileDTO.getHeadline());
+    candidate.setSummary(profileDTO.getSummary());
+    candidate.setExperienceYears(profileDTO.getExperienceYears());
+
+    if (profileDTO.getResumeUrl() != null && !profileDTO.getResumeUrl().isEmpty()) {
+        candidate.setResumeUrl(profileDTO.getResumeUrl());
+    }
+
+    // Update skills if provided
+    if (profileDTO.getSkills() != null) {
+        Set<Skill> skills = getOrCreateSkills(profileDTO.getSkills());
+        candidate.setSkills(skills);
+    }
+
+    // Save updated candidate
+    candidate = candidateRepository.save(candidate);
+
+    return mapToCandidateProfileDTO(candidate);
+}
+
+@Override
+    @Transactional
+    public void deleteCandidateById(Long candidateId) {
+        // 1) Get the logged-in admin
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || !currentUser.getRole().equals(UserRole.CANDIDATE)) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        // 2) Load the target user
+        User toDelete = userRepository.findById(candidateId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
+
+        // 3) Ensure they’re actually a CANDIDATE
+        if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
+            throw new IllegalStateException("You can only delete candidates.");
+        }
+
+        // 4) Delete associated candidate profile (if not cascaded)
+        candidateRepository.findByUserId(candidateId)
+            .ifPresent(candidateRepository::delete);
+
+        // 5) (Later) delete any applications, resumes, etc.
+
+        // 6) Finally, delete the User record
+        userRepository.delete(toDelete);
     }
 
 

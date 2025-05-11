@@ -25,9 +25,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // .requestMatchers(HttpMethod.POST, "/api/auth/register/candidate").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/employer/**").permitAll()
                         // .requestMatchers("/api/jobs/**").permitAll()
                         // .requestMatchers("/api/files/**").permitAll()
                         // .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/candidate/**").permitAll()
                         .requestMatchers("/api/companies/**").permitAll()
                         // .requestMatchers("/api/companies/*/jobs").permitAll()
                         // .requestMatchers("/api/companies/search").permitAll()

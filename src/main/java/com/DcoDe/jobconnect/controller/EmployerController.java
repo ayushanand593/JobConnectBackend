@@ -1,0 +1,66 @@
+package com.DcoDe.jobconnect.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.DcoDe.jobconnect.dto.EmployeeRegistrationDTO;
+import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
+import com.DcoDe.jobconnect.entities.Company;
+import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.UserRole;
+import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
+import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
+import com.DcoDe.jobconnect.utils.SecurityUtils;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/employer")
+@RequiredArgsConstructor
+public class EmployerController {
+
+    @Autowired
+     private final CompanyServiceI companyService;
+
+    @Autowired
+    private final EmployeeServiceI employerService;
+        
+    @PostMapping("/register")
+    public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
+        Company company = companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Company not found with ID: " + dto.getCompanyUniqueId()
+                ));
+        return ResponseEntity.ok(companyService.addEmployerToCompany(dto));
+    }
+
+    @GetMapping("/my-profile")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    public ResponseEntity<EmployerProfileDTO> getMyProfile() {
+        // Get the current authenticated user
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        // Verify the user is an employer
+        if (!currentUser.getRole().equals(UserRole.EMPLOYER)) {
+            throw new AccessDeniedException("Not authorized to access employer profile");
+        }
+
+        // Call the service method that already exists for getting the current user's profile
+        EmployerProfileDTO profile = employerService.getCurrentEmployerProfile();
+        return ResponseEntity.ok(profile);
+    }
+}

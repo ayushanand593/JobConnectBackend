@@ -1,6 +1,7 @@
 package com.DcoDe.jobconnect.services;
 
 import java.util.HashSet;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,10 +10,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
+import com.DcoDe.jobconnect.dto.EmployeeRegistrationDTO;
+import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.entities.Company;
+import com.DcoDe.jobconnect.entities.EmployerProfile;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.repositories.CompanyRepository;
+import com.DcoDe.jobconnect.repositories.EmployerProfileRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 
@@ -26,7 +31,7 @@ public class CompanyServiceImpl implements CompanyServiceI {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    // private final EmployerProfileRepository employerProfileRepository;
+    private final EmployerProfileRepository employerProfileRepository;
 
     @Override
     @Transactional
@@ -81,6 +86,59 @@ public class CompanyServiceImpl implements CompanyServiceI {
                 ));
         return mapToCompanyDetailDTO(company);
     }
+
+     @Override
+    public Optional<Company> findByCompanyUniqueId(String companyUniqueId) {
+        return companyRepository.findByCompanyUniqueId(companyUniqueId);
+    }
+
+    @Override
+    @Transactional
+    public EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto) {
+        // Check if email already exists
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        // Find company by unique ID
+        Company company = companyRepository.findByCompanyUniqueId(dto.getCompanyUniqueId())
+                .orElseThrow(()-> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Company not found with ID: " + dto.getCompanyUniqueId()
+                ));
+
+        // Create user
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(UserRole.EMPLOYER);
+        user.setCompany(company);
+
+        // Save user
+        user = userRepository.save(user);
+
+        // Create employer profile
+        EmployerProfile profile = new EmployerProfile();
+        profile.setUser(user);
+        profile.setFirstName(dto.getFirstName());
+        profile.setLastName(dto.getLastName());
+
+        // Save employer profile
+        profile = employerProfileRepository.save(profile);
+
+        // Map to DTO and return
+        EmployerProfileDTO profileDTO = new EmployerProfileDTO();
+        profileDTO.setId(profile.getId());
+        profileDTO.setFirstName(profile.getFirstName());
+        profileDTO.setLastName(profile.getLastName());
+        profileDTO.setEmail(user.getEmail());
+        profileDTO.setCompanyName(company.getCompanyName());
+        profileDTO.setCompanyId(company.getId());
+
+        return profileDTO;
+    }
+
+    
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {
         CompanyDetailDTO dto = new CompanyDetailDTO();
         dto.setId(company.getId());

@@ -4,6 +4,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
+import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.EmployerProfile;
 import com.DcoDe.jobconnect.entities.User;
@@ -15,6 +16,7 @@ import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,6 +37,30 @@ public class EmployerServiceImpl implements EmployeeServiceI {
 
         EmployerProfile profile = employerProfileRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+
+        return mapToEmployerProfileDTO(profile);
+    }
+
+     @Override
+    @Transactional
+    public EmployerProfileDTO updateProfile(EmployerProfileUpdateDTO dto) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || !currentUser.getRole().equals(UserRole.EMPLOYER)) {
+            throw new AccessDeniedException("Not authorized to update employer profile");
+        }
+
+        EmployerProfile profile = employerProfileRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+
+        // Update fields
+        profile.setFirstName(dto.getFirstName());
+        profile.setLastName(dto.getLastName());
+        profile.setPhone(dto.getPhone());
+        profile.setJobTitle(dto.getJobTitle());
+        // profile.setProfilePictureUrl(dto.getProfilePictureUrl()); 
+
+        // Save updated profile
+        profile = employerProfileRepository.save(profile);
 
         return mapToEmployerProfileDTO(profile);
     }

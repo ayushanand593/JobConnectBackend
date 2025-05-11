@@ -97,6 +97,13 @@ public class CandidateServiceImpl implements CandidateServiceI {
         return mapToCandidateProfileDTO(candidate);
     }
 
+    @Override
+    public CandidateProfileDTO getCandidateById(Long id) {
+        Candidate candidate = candidateRepository.findByIdWithSkills(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate not found with ID: " + id));
+        return mapToCandidateProfileDTO(candidate);
+    }
+
 
     private CandidateProfileDTO mapToCandidateProfileDTO(Candidate candidate) {
         CandidateProfileDTO dto = new CandidateProfileDTO();

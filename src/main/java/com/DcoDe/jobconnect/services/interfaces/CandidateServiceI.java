@@ -6,4 +6,5 @@ import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
 public interface CandidateServiceI {
 CandidateProfileDTO registerCandidate(CandidateRegistrationDTO dto);
 CandidateProfileDTO getCurrentCandidateProfile();
+CandidateProfileDTO getCandidateById(Long id);
 }

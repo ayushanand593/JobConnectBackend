@@ -8,4 +8,8 @@ public interface JobServiceI {
     JobDTO createJob(JobCreateDTO jobDto);
 
     JobDTO getJobByJobId(String jobId);
+
+    JobDTO updateJobByJobId(String jobId, JobCreateDTO jobDto);
+
+    void deleteJobByJobId(String jobId);
 }

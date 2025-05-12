@@ -1,20 +1,29 @@
 package com.DcoDe.jobconnect.services;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
+import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.dto.SkillDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.EmployerProfile;
+import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.repositories.CompanyRepository;
+// import com.DcoDe.jobconnect.repositories.CompanyRepository;
 import com.DcoDe.jobconnect.repositories.EmployerProfileRepository;
+import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
+
+// import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +34,7 @@ public class EmployerServiceImpl implements EmployeeServiceI {
 
  private final EmployerProfileRepository employerProfileRepository;
     private final UserRepository userRepository;
+    private final JobRepository jobRepository;
     // private final CompanyRepository companyRepository;
 
 
@@ -100,6 +110,12 @@ public void deleteEmployerById(Long employerId) {
         userRepository.delete(toDelete);
 }
 
+@Override
+    public List<JobDTO> getJobsByEmployerId(Long employerId) {
+        List<Job> jobs = jobRepository.findAllByPostedById(employerId);
+        return jobs.stream().map(this::mapToJobDTO).collect(Collectors.toList());
+    }
+
 
     private EmployerProfileDTO mapToEmployerProfileDTO(EmployerProfile profile) {
         EmployerProfileDTO dto = new EmployerProfileDTO();
@@ -119,4 +135,42 @@ public void deleteEmployerById(Long employerId) {
 
         return dto;
     }
+
+     private JobDTO mapToJobDTO(Job job) {
+    JobDTO dto = new JobDTO();
+    dto.setId(job.getId()); // Set the ID
+    dto.setJobId(job.getJobId());
+    dto.setTitle(job.getTitle());
+    dto.setLocation(job.getLocation());
+    dto.setJobType(job.getJobType().toString());
+    dto.setExperienceLevel(job.getExperienceLevel());
+    dto.setDescription(job.getDescription()); // Set description
+    dto.setRequirements(job.getRequirements()); // Set requirements
+    dto.setResponsibilities(job.getResponsibilities()); // Set responsibilities
+    dto.setSalaryRange(job.getSalaryRange()); // Set salaryRange
+
+    if (job.getSkills() != null) {
+        dto.setSkills(job.getSkills().stream()
+                .map(skill -> {
+                    SkillDTO skillDTO = new SkillDTO();
+                    skillDTO.setId(skill.getId());
+                    skillDTO.setName(skill.getName());
+                    return skillDTO;
+                })
+                .collect(Collectors.toList()));
+    } else {
+        dto.setSkills(null);
+    }
+
+    dto.setStatus(job.getStatus().toString());
+    dto.setCreatedAt(job.getCreatedAt());
+    dto.setUpdatedAt(job.getUpdatedAt());
+
+    if (job.getCompany() != null) {
+        dto.setCompanyName(job.getCompany().getCompanyName());
+        dto.setCompanyId(job.getCompany().getId());
+    }
+
+    return dto;
+}
 }

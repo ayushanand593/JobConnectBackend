@@ -1,5 +1,7 @@
 package com.DcoDe.jobconnect.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.DcoDe.jobconnect.dto.EmployeeRegistrationDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
+import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
@@ -88,5 +91,17 @@ public class EmployerController {
     public ResponseEntity<?> deleteEmployer(@PathVariable Long employerId) {
     employerService.deleteEmployerById(employerId);
     return ResponseEntity.ok("Employer deleted successfully.");
+}
+
+   @GetMapping("/my-jobs")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+public ResponseEntity<List<JobDTO>> getMyJobs() {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authenticated");
+    }
+
+    List<JobDTO> jobs = employerService.getJobsByEmployerId(currentUser.getId());
+    return ResponseEntity.ok(jobs);
 }
 }

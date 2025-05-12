@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,6 @@ import com.DcoDe.jobconnect.entities.Job;
 public interface JobRepository extends JpaRepository<Job, Long> {
 
     Optional<Job> findByJobId(String jobId);
+
+    List<Job> findAllByPostedById(Long postedById);
 }

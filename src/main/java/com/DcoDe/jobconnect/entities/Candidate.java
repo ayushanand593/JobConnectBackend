@@ -44,8 +44,10 @@ public class Candidate {
     @Column(name = "experience_years")
     private Integer experienceYears;
 
-    @Column(name = "resume_url")
-    private String resumeUrl;
+    // @Column(name = "resume_url")
+    // private String resumeUrl;
+      @Column(name = "resume_file_id")
+    private String resumeFileId;
 
     @ManyToMany
     @JoinTable(
@@ -55,12 +57,12 @@ public class Candidate {
     )
     private Set<Skill> skills = new HashSet<>();
 
-    @OneToMany(mappedBy = "candidate")
-    private List<JobApplication> applications = new ArrayList<>();
+    // @OneToMany(mappedBy = "candidate")
+    // private List<JobApplication> applications = new ArrayList<>();
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstName, lastName, phone, headline, summary, experienceYears, resumeUrl);
+        return Objects.hash(id, firstName, lastName, phone, headline, summary, experienceYears, resumeFileId);
         // Don't include user in hashCode calculation
     }
     

@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
@@ -76,5 +78,12 @@ public class CandidateController {
     public ResponseEntity<?> deleteCandidate(@PathVariable Long id) {
         candidateService.deleteCandidateById(id);
         return ResponseEntity.ok("Candidate deleted successfully.");
+    }
+
+     @PostMapping("/resume")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public ResponseEntity<CandidateProfileDTO> uploadResume(
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(candidateService.uploadResume(file));
     }
 }

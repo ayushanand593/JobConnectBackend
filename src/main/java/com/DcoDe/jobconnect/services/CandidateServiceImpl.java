@@ -10,12 +10,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
 import com.DcoDe.jobconnect.dto.SkillDTO;
 import com.DcoDe.jobconnect.entities.Candidate;
+import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Skill;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
@@ -24,6 +26,8 @@ import com.DcoDe.jobconnect.repositories.CandidateRepository;
 import com.DcoDe.jobconnect.repositories.SkillRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
+import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
+import org.springframework.web.multipart.MultipartFile;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;
@@ -37,6 +41,7 @@ public class CandidateServiceImpl implements CandidateServiceI {
            private final UserRepository userRepository;
         private final SkillRepository skillRepository;
             private final PasswordEncoder passwordEncoder;
+             private final FileStorageServiceI fileStorageService;
 
 
     @Override
@@ -124,9 +129,9 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
     candidate.setSummary(profileDTO.getSummary());
     candidate.setExperienceYears(profileDTO.getExperienceYears());
 
-    if (profileDTO.getResumeUrl() != null && !profileDTO.getResumeUrl().isEmpty()) {
-        candidate.setResumeUrl(profileDTO.getResumeUrl());
-    }
+    // if (profileDTO.getResumeUrl() != null && !profileDTO.getResumeUrl().isEmpty()) {
+    //     candidate.setResumeUrl(profileDTO.getResumeUrl());
+    // }
 
     // Update skills if provided
     if (profileDTO.getSkills() != null) {
@@ -168,6 +173,32 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
         userRepository.delete(toDelete);
     }
 
+    @Override
+    @Transactional
+    public CandidateProfileDTO uploadResume(MultipartFile file) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+
+        // If there's an existing resume, delete it
+        if (candidate.getResumeFileId() != null) {
+            fileStorageService.deleteFile(candidate.getResumeFileId());
+        }
+
+        // Upload the file and get the file ID
+        String resumeFileId = fileStorageService.uploadFile(file);
+
+        // Update candidate resume file ID
+        candidate.setResumeFileId(resumeFileId);
+        candidate = candidateRepository.save(candidate);
+
+        return mapToCandidateProfileDTO(candidate);
+    }
+
 
     private CandidateProfileDTO mapToCandidateProfileDTO(Candidate candidate) {
         CandidateProfileDTO dto = new CandidateProfileDTO();
@@ -179,8 +210,18 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
         dto.setHeadline(candidate.getHeadline());
         dto.setSummary(candidate.getSummary());
         dto.setExperienceYears(candidate.getExperienceYears());
-        dto.setResumeUrl(candidate.getResumeUrl());
+        // dto.setResumeUrl(candidate.getResumeUrl());
         dto.setCreatedAt(candidate.getUser().getCreatedAt());
+
+         if (candidate.getResumeFileId() != null) {
+            try {
+                FileDocument fileDocument = fileStorageService.getFile(candidate.getResumeFileId());
+                dto.setResumeFileId(candidate.getResumeFileId());
+                dto.setResumeFileName(fileDocument.getFileName());
+            } catch (Exception e) {
+                // If file not found, just don't set the resume info
+            }
+        }
 
         List<SkillDTO> skillDTOs = mapToSkillDTOs(candidate.getSkills());
         dto.setSkills(skillDTOs);

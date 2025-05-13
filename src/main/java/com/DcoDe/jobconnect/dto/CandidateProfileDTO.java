@@ -15,7 +15,9 @@ public class CandidateProfileDTO {
     private String headline;
     private String summary;
     private Integer experienceYears;
-    private String resumeUrl;
+    // private String resumeUrl;
+    private String resumeFileId;
+    private String resumeFileName;
     private List<SkillDTO> skills;
     private LocalDateTime createdAt;
 }

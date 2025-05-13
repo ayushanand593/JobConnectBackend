@@ -118,4 +118,9 @@ public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
 public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
     return ResponseEntity.ok(dashboardService.getCandidateApplications());
 }
+@GetMapping("/view/applications/{applicationId}")
+@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+public ResponseEntity<JobApplicationDetailDTO> getCandidateApplicationDetail(@PathVariable Long applicationId) {
+    return ResponseEntity.ok(dashboardService.getCandidateApplicationDetail(applicationId));
+}
 }

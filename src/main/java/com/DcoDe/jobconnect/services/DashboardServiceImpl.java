@@ -20,6 +20,7 @@ import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
@@ -69,6 +70,24 @@ public List<JobApplicationDetailDTO> getCandidateApplications() {
     return applications.stream()
         .map(this::mapToJobApplicationDetailDTO)
         .collect(Collectors.toList());
+}
+
+@Override
+public JobApplicationDetailDTO getCandidateApplicationDetail(Long applicationId) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null || currentUser.getCandidateProfile() == null) {
+        throw new AccessDeniedException("Not authorized to view application details");
+    }
+
+    JobApplication application = applicationRepository.findById(applicationId)
+        .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+    // Verify the application belongs to the current candidate
+    if (!application.getCandidate().getId().equals(currentUser.getCandidateProfile().getId())) {
+        throw new AccessDeniedException("Not authorized to view this application");
+    }
+
+    return mapToJobApplicationDetailDTO(application);
 }
 
 private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> allApplications, 

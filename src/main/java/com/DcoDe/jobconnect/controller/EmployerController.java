@@ -109,10 +109,11 @@ public ResponseEntity<List<JobDTO>> getMyJobs() {
     List<JobDTO> jobs = employerService.getJobsByEmployerId(currentUser.getId());
     return ResponseEntity.ok(jobs);
 }
- @GetMapping("/{jobId}/applications")
+ @GetMapping("/applications/{jobId}")
 @PreAuthorize("hasRole('EMPLOYER')")
 public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariable String jobId) {
     List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
     return ResponseEntity.ok(applications);
 }
+
 }

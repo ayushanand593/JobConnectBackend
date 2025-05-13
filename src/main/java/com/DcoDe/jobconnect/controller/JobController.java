@@ -66,7 +66,7 @@ public class JobController  {
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");
     }
-    @PostMapping("/{jobId}/apply")
+    @PostMapping("/apply/{jobId}")
     @PreAuthorize("hasRole('CANDIDATE')")
     public ResponseEntity<JobApplicationDTO> applyToJob(
             @PathVariable String jobId,

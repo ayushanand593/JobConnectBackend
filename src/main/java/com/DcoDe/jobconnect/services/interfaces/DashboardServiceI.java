@@ -10,4 +10,8 @@ public interface DashboardServiceI {
      CandidateDashboardStatsDTO getCandidateDashboardStats(LocalDate startDate, LocalDate endDate);
 
      List<JobApplicationDetailDTO> getCandidateApplications();
+
+     JobApplicationDetailDTO getCandidateApplicationDetail(Long applicationId);
+
+     
 }

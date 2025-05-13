@@ -49,7 +49,7 @@ public class CandidateController {
     }
 
     @GetMapping("/profile")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> getCurrentProfile() {
         return ResponseEntity.ok(candidateService.getCurrentCandidateProfile());
     }
@@ -60,7 +60,7 @@ public class CandidateController {
     }
 
     @PutMapping("/profile-update")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> updateProfile(
             @Valid @RequestBody CandidateProfileUpdateDTO profileDTO) {
 
@@ -72,7 +72,7 @@ public class CandidateController {
     }
 
      @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<?> deleteCandidate(@PathVariable Long id) {
         candidateService.deleteCandidateById(id);
         return ResponseEntity.ok("Candidate deleted successfully.");

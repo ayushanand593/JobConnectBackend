@@ -12,8 +12,7 @@ import lombok.Getter;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
-
+     private final User user;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user, Collection<? extends GrantedAuthority> authorities) {
@@ -25,7 +24,8 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
-     @Override
+
+    @Override
     public String getPassword() {
         return user.getPassword();
     }
@@ -53,9 +53,5 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public User getUser() {
-        return user;
     }
 }

@@ -8,12 +8,23 @@ import com.DcoDe.jobconnect.entities.User;
 
 public class SecurityUtils {
 
-     public static User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && 
-            authentication.getPrincipal() instanceof CustomUserDetails) {
-            return ((CustomUserDetails) authentication.getPrincipal()).getUser();
+    public static User getCurrentUser() {
+     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        System.out.println("Authentication: " + (authentication != null ? authentication.getName() : "null"));
+        System.out.println("Authentication principal: " + 
+            (authentication != null ? authentication.getPrincipal().getClass().getName() : "null"));
+        
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            
+            if (principal instanceof CustomUserDetails) {
+                return ((CustomUserDetails) principal).getUser();
+            } else {
+                System.out.println("Principal is not CustomUserDetails: " + principal.getClass().getName());
+            }
         }
+        
         return null;
     }
 }

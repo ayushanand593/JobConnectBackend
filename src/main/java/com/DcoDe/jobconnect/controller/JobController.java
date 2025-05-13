@@ -42,7 +42,7 @@ public class JobController  {
     }
 
        @PutMapping("/jobId/{jobId}")
-    @PreAuthorize("hasRole('EMPLOYER')")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     public ResponseEntity<JobDTO> updateJobByJobId(
             @PathVariable String jobId,
             @Valid @RequestBody JobCreateDTO jobDto) {
@@ -50,7 +50,7 @@ public class JobController  {
     }
 
     @DeleteMapping("/jobId/{jobId}")
-    @PreAuthorize("hasRole('EMPLOYER')")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     public ResponseEntity<String> deleteJobByJobId(@PathVariable String jobId) {
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");

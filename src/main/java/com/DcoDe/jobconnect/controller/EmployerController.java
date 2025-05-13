@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,9 +25,9 @@ import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
-import com.DcoDe.jobconnect.services.JobApplicationService;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
+import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.validation.Valid;
@@ -46,7 +45,7 @@ public class EmployerController {
     private final EmployeeServiceI employerService;
 
     @Autowired
-    private final JobApplicationService applicationService;
+    private final JobApplicationServiceI applicationService;
         
     @PostMapping("/register")
     public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {

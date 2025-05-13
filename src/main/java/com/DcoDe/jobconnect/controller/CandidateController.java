@@ -23,11 +23,11 @@ import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
+import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.validation.Valid;
@@ -41,6 +41,8 @@ public class CandidateController {
         private final CandidateServiceI candidateService;
 
         private final DashboardServiceI dashboardService;
+
+        private final JobApplicationServiceI jobApplicationService;
 
 
           @PostMapping("/register")
@@ -85,7 +87,7 @@ public class CandidateController {
 
      @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    public ResponseEntity<?> deleteCandidate(@PathVariable Long id) {
+    public ResponseEntity<String> deleteCandidate(@PathVariable Long id) {
         candidateService.deleteCandidateById(id);
         return ResponseEntity.ok("Candidate deleted successfully.");
     }
@@ -122,5 +124,12 @@ public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() 
 @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<JobApplicationDetailDTO> getCandidateApplicationDetail(@PathVariable Long applicationId) {
     return ResponseEntity.ok(dashboardService.getCandidateApplicationDetail(applicationId));
+}
+
+@DeleteMapping("/withdraw/applications/{applicationId}")
+@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+public ResponseEntity<String> withdrawApplication(@PathVariable Long applicationId) {
+   jobApplicationService.withdrawApplication(applicationId);
+     return ResponseEntity.ok("Job Application deleted successfully.");
 }
 }

@@ -21,8 +21,6 @@ import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.entities.JobApplication;
-import com.DcoDe.jobconnect.services.JobApplicationService;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 
 import jakarta.validation.Valid;
@@ -67,7 +65,7 @@ public class JobController  {
         return ResponseEntity.ok("Job deleted successfully");
     }
     @PostMapping("/apply/{jobId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasAuthority('CANDIDATE')")
     public ResponseEntity<JobApplicationDTO> applyToJob(
             @PathVariable String jobId,
             @RequestPart("applicationData") @Valid JobApplicationSubmissionDTO applicationCreateDTO,

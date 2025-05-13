@@ -13,6 +13,7 @@ import com.DcoDe.jobconnect.repositories.CandidateRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
+import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class JobApplicationService {
+public class JobApplicationServiceImpl implements JobApplicationServiceI {
 
     private final JobApplicationRepository jobApplicationRepository;
     private final JobRepository jobRepository;

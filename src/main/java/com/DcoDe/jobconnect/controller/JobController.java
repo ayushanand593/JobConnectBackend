@@ -1,5 +1,7 @@
 package com.DcoDe.jobconnect.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.JobApplicationDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.entities.JobApplication;
+import com.DcoDe.jobconnect.services.JobApplicationService;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 
 import jakarta.validation.Valid;
@@ -28,6 +36,9 @@ public class JobController  {
     private final JobServiceI jobService;
     // @Autowired
     // private final ApplicationService applicationService;
+
+
+    
 
     @PostMapping("/create-job")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
@@ -55,4 +66,16 @@ public class JobController  {
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");
     }
+    @PostMapping("/{jobId}/apply")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public ResponseEntity<JobApplicationDTO> applyToJob(
+            @PathVariable String jobId,
+            @RequestPart("applicationData") @Valid JobApplicationSubmissionDTO applicationCreateDTO,
+            @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
+            @RequestPart(value = "coverLetterFile", required = false) MultipartFile coverLetterFile) {
+        JobApplicationDTO applicationDTO = jobService.applyToJob(jobId, applicationCreateDTO, resumeFile, coverLetterFile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(applicationDTO);
+    }
+
+   
 }

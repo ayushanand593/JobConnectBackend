@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class JobApplicationService {
     private final JobRepository jobRepository;
     private final CandidateRepository candidateRepository;
     private final FileStorageServiceI fileStorageService;
+    private final JobApplicationRepository applicationRepository;
 
     /**
      * Submit a new job application
@@ -92,6 +95,28 @@ public class JobApplicationService {
         return mapToJobApplicationDTO(application);
     }
 
+   
+  
+    @Transactional(readOnly = true)
+    public List<JobApplicationDTO> getApplicationsForJob(String jobId) {
+        // Fetch the job by jobId
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with ID: " + jobId));
+
+        // Get the current authenticated employer
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || !job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You are not authorized to view applications for this job");
+        }
+
+        // Fetch applications for the job
+        List<JobApplication> applications = applicationRepository.findByJobId(jobId);
+
+        // Map applications to ApplicationDTO
+        return applications.stream()
+                .map(this::mapToJobApplicationDTO)
+                .collect(Collectors.toList());
+    }
     /**
      * Get a specific job application
      */
@@ -118,6 +143,8 @@ public class JobApplicationService {
         return mapToJobApplicationDTO(application);
     }
 
+    
+    
     /**
      * Get all applications for the current candidate
      */

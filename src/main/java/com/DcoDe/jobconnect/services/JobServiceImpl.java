@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.services;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,18 +9,27 @@ import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.JobApplicationDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.dto.SkillDTO;
+import com.DcoDe.jobconnect.entities.Candidate;
+import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
+import com.DcoDe.jobconnect.entities.JobApplication;
 import com.DcoDe.jobconnect.entities.Skill;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.JobType;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
+import com.DcoDe.jobconnect.repositories.CandidateRepository;
+import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.repositories.SkillRepository;
+import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
@@ -31,6 +41,9 @@ public class JobServiceImpl implements JobServiceI {
 
     private final JobRepository jobRepository;
     private final SkillRepository skillRepository;
+    private final CandidateRepository candidateRepository;
+    private final JobApplicationRepository jobApplicationRepository;
+    private final FileStorageServiceI fileStorageService;
 
      @Override
     @Transactional
@@ -134,6 +147,59 @@ public class JobServiceImpl implements JobServiceI {
         jobRepository.delete(job);
     }
 
+    @Override
+    @Transactional
+    public JobApplicationDTO applyToJob(String jobId, JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile, MultipartFile coverLetterFile) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if already applied
+        if (jobApplicationRepository.existsByJobIdAndCandidateId(job.getId(), candidate.getId())) {
+            throw new RuntimeException("You have already applied to this job");
+        }
+
+        JobApplication application = new JobApplication();
+        application.setJob(job);
+        application.setCandidate(candidate);
+        application.setVoluntaryDisclosures(applicationCreateDTO.getVoluntaryDisclosures());
+        application.setCreatedAt(LocalDateTime.now());
+        application.setUpdatedAt(LocalDateTime.now());
+
+        // Handle resume
+        if (applicationCreateDTO.getUseExistingResume() != null && applicationCreateDTO.getUseExistingResume()) {
+            // Use candidate's stored resume
+            if (candidate.getResumeFileId() == null) {
+                throw new ResourceNotFoundException("Candidate does not have a stored resume");
+            }
+            application.setResumeFileId(candidate.getResumeFileId());
+        } else if (resumeFile != null && !resumeFile.isEmpty()) {
+            // Upload new resume
+            String resumeFileId = fileStorageService.uploadFile(resumeFile);
+            application.setResumeFileId(resumeFileId);
+        } else {
+            throw new RuntimeException("Resume is required");
+        }
+
+        // Handle cover letter
+        if (coverLetterFile != null && !coverLetterFile.isEmpty()) {
+            String coverLetterFileId = fileStorageService.uploadFile(coverLetterFile);
+            application.setCoverLetterFileId(coverLetterFileId);
+        }
+
+        // Save application
+        application = jobApplicationRepository.save(application);
+
+        return mapToJobApplicationDTO(application);
+    }
+
 
     private JobDTO mapToJobDTO(Job job) {
         JobDTO dto = new JobDTO();
@@ -200,6 +266,41 @@ public class JobServiceImpl implements JobServiceI {
         return mapToJobDTO(job);
     }
    
+private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
+        JobApplicationDTO dto = new JobApplicationDTO();
+        dto.setId(application.getId());
+        dto.setJobId(application.getJob().getId());
+        dto.setCandidateId(application.getCandidate().getId());
+        dto.setStatus(application.getStatus());
+        dto.setVoluntaryDisclosures(application.getVoluntaryDisclosures());
+        dto.setCreatedAt(application.getCreatedAt());
+        dto.setUpdatedAt(application.getUpdatedAt());
+
+        // Get resume info
+        if (application.getResumeFileId() != null) {
+            try {
+                FileDocument resumeFile = fileStorageService.getFile(application.getResumeFileId());
+                dto.setResumeFileId(application.getResumeFileId());
+                dto.setResumeFileName(resumeFile.getFileName());
+            } catch (Exception e) {
+                // Log error but don't fail
+            }
+        }
+
+        // Get cover letter info
+        if (application.getCoverLetterFileId() != null) {
+            try {
+                FileDocument coverLetterFile = fileStorageService.getFile(application.getCoverLetterFileId());
+                dto.setCoverLetterFileId(application.getCoverLetterFileId());
+                dto.setCoverLetterFileName(coverLetterFile.getFileName());
+            } catch (Exception e) {
+                // Log error but don't fail
+            }
+        }
+
+        return dto;
+    }
+
     private String generateJobId(String companyName, String jobTitle) {
         String baseId = companyName.replaceAll("\\s+", "-").toLowerCase() + "-" +
                 jobTitle.replaceAll("\\s+", "-").toLowerCase();

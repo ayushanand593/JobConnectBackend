@@ -21,10 +21,12 @@ import org.springframework.web.server.ResponseStatusException;
 import com.DcoDe.jobconnect.dto.EmployeeRegistrationDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
+import com.DcoDe.jobconnect.services.JobApplicationService;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
@@ -42,6 +44,9 @@ public class EmployerController {
 
     @Autowired
     private final EmployeeServiceI employerService;
+
+    @Autowired
+    private final JobApplicationService applicationService;
         
     @PostMapping("/register")
     public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
@@ -103,5 +108,11 @@ public ResponseEntity<List<JobDTO>> getMyJobs() {
 
     List<JobDTO> jobs = employerService.getJobsByEmployerId(currentUser.getId());
     return ResponseEntity.ok(jobs);
+}
+ @GetMapping("/{jobId}/applications")
+@PreAuthorize("hasRole('EMPLOYER')")
+public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariable String jobId) {
+    List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
+    return ResponseEntity.ok(applications);
 }
 }

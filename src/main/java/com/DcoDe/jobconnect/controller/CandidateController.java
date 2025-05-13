@@ -1,5 +1,9 @@
 package com.DcoDe.jobconnect.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,11 +19,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
+import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.validation.Valid;
@@ -31,6 +39,8 @@ import lombok.RequiredArgsConstructor;
 public class CandidateController {
 
         private final CandidateServiceI candidateService;
+
+        private final DashboardServiceI dashboardService;
 
 
           @PostMapping("/register")
@@ -86,4 +96,26 @@ public class CandidateController {
             @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(candidateService.uploadResume(file));
     }
+     @GetMapping("/dashboard")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
+    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+    // Default to last 30 days if not specified
+    if (startDate == null) {
+        startDate = LocalDate.now().minusDays(30);
+    }
+    if (endDate == null) {
+        endDate = LocalDate.now();
+    }
+
+    return ResponseEntity.ok(dashboardService.getCandidateDashboardStats(startDate, endDate));
+}
+
+@GetMapping("/view/applications")
+@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
+    return ResponseEntity.ok(dashboardService.getCandidateApplications());
+}
 }

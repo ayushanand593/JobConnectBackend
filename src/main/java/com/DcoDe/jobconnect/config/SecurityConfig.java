@@ -46,6 +46,7 @@ public class SecurityConfig {
                     // Permit public endpoints
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("api/jobs/jobId/{jobId}").permitAll()
+                    .requestMatchers("api/companies/**").permitAll()
                     .requestMatchers("api/employer/register").permitAll()
                     .requestMatchers("api/candidate/register").permitAll()
                     .anyRequest().authenticated()

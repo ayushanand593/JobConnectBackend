@@ -3,6 +3,7 @@ package com.DcoDe.jobconnect.repositories;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.entities.JobApplication;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -21,4 +22,6 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     @Query("SELECT a FROM JobApplication  a WHERE a.job.jobId = :jobId")
     List<JobApplication> findByJobId(@Param("jobId") String jobId);
+
+    List<JobApplication> findAllByJobIdIn(Collection<Long> jobIds);
 }

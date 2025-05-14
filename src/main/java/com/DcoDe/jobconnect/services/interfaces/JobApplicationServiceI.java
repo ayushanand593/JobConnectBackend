@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 
 public interface JobApplicationServiceI {
         JobApplicationDTO submitApplication(JobApplicationSubmissionDTO submissionDTO,MultipartFile resumeFile,MultipartFile coverLetterFile);
@@ -22,4 +23,6 @@ public interface JobApplicationServiceI {
         JobApplicationDTO updateApplicationStatus(Long id, JobApplicationUpdateDTO updateDTO);
 
         void withdrawApplication(Long id);
+
+        void updateApplicationStatus(Long id, ApplicationStatus status);
 }

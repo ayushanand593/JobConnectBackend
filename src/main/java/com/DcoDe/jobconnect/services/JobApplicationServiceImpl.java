@@ -8,6 +8,7 @@ import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.repositories.CandidateRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
@@ -206,6 +207,26 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         jobApplicationRepository.delete(application);
     }
 
+     @Override
+@Transactional
+public void updateApplicationStatus(Long id, ApplicationStatus status) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authorized to update application status");
+    }
+
+    JobApplication application = applicationRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + id));
+
+    // Check if the application belongs to user's company
+    if (!application.getJob().getCompany().getId().equals(currentUser.getCompany().getId())) {
+        throw new AccessDeniedException("Not authorized to update this application");
+    }
+
+    application.setStatus(status);
+    applicationRepository.save(application);
+}
+    
     private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
         JobApplicationDTO dto = new JobApplicationDTO();
         dto.setId(application.getId());

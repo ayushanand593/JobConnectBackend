@@ -2,6 +2,7 @@ package com.DcoDe.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,6 +30,7 @@ import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
@@ -154,6 +156,37 @@ public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariab
         jobService.changeJobStatusByJobId(jobId, status);
         return ResponseEntity.ok().build();
     }
+
+//     @PatchMapping("/application/{id}/status")
+// public ResponseEntity<Void> updateApplicationStatus(
+//         @PathVariable Long id,
+//         @RequestBody Map<String, String> payload) {
+    
+//     // Parse the status from the request body
+//     String statusStr = payload.get("status");
+//     if (statusStr == null) {
+//         throw new IllegalArgumentException("Status is required");
+//     }
+    
+//     ApplicationStatus status;
+//     try {
+//         status = ApplicationStatus.valueOf(statusStr);
+//     } catch (IllegalArgumentException e) {
+//         throw new IllegalArgumentException("Invalid status value: " + statusStr);
+//     }
+    
+//     applicationService.updateApplicationStatus(id, status);
+//     return ResponseEntity.ok().build();
+// }
+@PatchMapping("/application/{id}/status")
+@PreAuthorize("hasRole('EMPLOYER')")
+public ResponseEntity<Void> updateApplicationStatus(
+        @PathVariable Long id,
+        @RequestParam ApplicationStatus status) {
+    
+    applicationService.updateApplicationStatus(id, status);
+    return ResponseEntity.ok().build();
+}
 
 
 

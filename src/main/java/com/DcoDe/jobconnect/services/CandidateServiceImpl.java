@@ -154,23 +154,30 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
             throw new AccessDeniedException("Not authorized");
         }
 
-        // 2) Load the target user
-        User toDelete = userRepository.findById(candidateId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
 
-        // 3) Ensure they’re actually a CANDIDATE
-        if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
-            throw new IllegalStateException("You can only delete candidates.");
-        }
+            
+         // 3) Check if the candidate ID matches the logged-in user's candidate ID
+    if (!currentUser.getId().equals(candidateId)) {
+        throw new AccessDeniedException("You are not authorized to delete this candidate profile");
+    }
 
-        // 4) Delete associated candidate profile (if not cascaded)
-        candidateRepository.findByUserId(candidateId)
-            .ifPresent(candidateRepository::delete);
+     // 4) Load the target user
+    User toDelete = userRepository.findById(candidateId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
 
-        // 5) (Later) delete any applications, resumes, etc.
+       // 5) Ensure they’re actually a CANDIDATE
+    if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
+        throw new IllegalStateException("You can only delete candidates.");
+    }
 
-        // 6) Finally, delete the User record
-        userRepository.delete(toDelete);
+      // 6) Delete associated candidate profile (if not cascaded)
+    candidateRepository.findByUserId(candidateId)
+        .ifPresent(candidateRepository::delete);
+
+    // 7) (Later) delete any applications, resumes, etc.
+
+    // 8) Finally, delete the User record
+    userRepository.delete(toDelete);
     }
 
     @Override

@@ -108,7 +108,7 @@ public class EmployerController {
 
     @DeleteMapping("/delete/{employerId}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
-    public ResponseEntity<?> deleteEmployer(@PathVariable Long employerId) {
+    public ResponseEntity<String> deleteEmployer(@PathVariable Long employerId) {
     employerService.deleteEmployerById(employerId);
     return ResponseEntity.ok("Employer deleted successfully.");
 }

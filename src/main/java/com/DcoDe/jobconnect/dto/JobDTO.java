@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.DcoDe.jobconnect.enums.JobStatus;
+
 @Data
 public class JobDTO {
     private Long id;
@@ -21,7 +23,7 @@ public class JobDTO {
     private String responsibilities;
     private String salaryRange;
     private List<SkillDTO> skills;
-    private String status;
+    private JobStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

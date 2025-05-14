@@ -162,7 +162,7 @@ public void deleteEmployerById(Long employerId) {
         dto.setSkills(null);
     }
 
-    dto.setStatus(job.getStatus().toString());
+    dto.setStatus(job.getStatus());
     dto.setCreatedAt(job.getCreatedAt());
     dto.setUpdatedAt(job.getUpdatedAt());
 

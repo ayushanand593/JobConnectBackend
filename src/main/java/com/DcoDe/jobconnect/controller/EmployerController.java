@@ -140,4 +140,6 @@ public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariab
     return ResponseEntity.ok(applications);
 }
 
+
+
 }

@@ -215,7 +215,7 @@ public class JobServiceImpl implements JobServiceI {
         dto.setRequirements(job.getRequirements());
         dto.setResponsibilities(job.getResponsibilities());
         dto.setSalaryRange(job.getSalaryRange());
-        dto.setStatus(job.getStatus().name());
+        dto.setStatus(job.getStatus());
         dto.setCreatedAt(job.getCreatedAt());
         dto.setUpdatedAt(job.getUpdatedAt());
 

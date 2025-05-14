@@ -6,6 +6,7 @@ import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.enums.JobStatus;
 
 public interface JobServiceI {
 
@@ -18,4 +19,6 @@ public interface JobServiceI {
     void deleteJobByJobId(String jobId);
     
     JobApplicationDTO applyToJob(String jobId, JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile, MultipartFile coverLetterFile);
+
+    void changeJobStatusByJobId(String jobId, JobStatus status);
 }

@@ -200,6 +200,25 @@ public class JobServiceImpl implements JobServiceI {
         return mapToJobApplicationDTO(application);
     }
 
+    @Override
+    @Transactional
+    public void changeJobStatusByJobId(String jobId, JobStatus status) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized to update job status");
+        }
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if user has permission to update this job
+        if (!job.getCompany().getId().equals(currentUser.getCompany().getId())) {
+            throw new AccessDeniedException("Not authorized to update this job status");
+        }
+
+        job.setStatus(status);
+        jobRepository.save(job);
+    }
 
     private JobDTO mapToJobDTO(Job job) {
         JobDTO dto = new JobDTO();

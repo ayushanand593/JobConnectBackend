@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -28,11 +29,13 @@ import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
+import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.validation.Valid;
@@ -54,6 +57,9 @@ public class EmployerController {
 
     @Autowired
     private final DashboardServiceI dashboardService;
+
+    @Autowired
+    private final JobServiceI  jobService;
         
     @PostMapping("/register")
     public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
@@ -139,6 +145,15 @@ public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariab
     List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
     return ResponseEntity.ok(applications);
 }
+
+ @PatchMapping("/jobId/{jobId}/status")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ResponseEntity<Void> changeJobStatusByJobId(
+            @PathVariable String jobId,
+            @RequestParam JobStatus status) {
+        jobService.changeJobStatusByJobId(jobId, status);
+        return ResponseEntity.ok().build();
+    }
 
 
 

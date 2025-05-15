@@ -29,6 +29,8 @@ import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import com.DcoDe.jobconnect.exceptions.DuplicateEmailException;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -40,7 +42,7 @@ public class CandidateServiceImpl implements CandidateServiceI {
            private final UserRepository userRepository;
         private final SkillRepository skillRepository;
             private final PasswordEncoder passwordEncoder;
-             private final FileStorageServiceI fileStorageService;
+             private final FileStorageServiceI fileStorageService; 
 
 
     @Override
@@ -48,7 +50,7 @@ public class CandidateServiceImpl implements CandidateServiceI {
     public CandidateProfileDTO registerCandidate(CandidateRegistrationDTO dto) {
         // Check if email already exists
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new DuplicateEmailException("Email already registered");
         }
 
         // Create user

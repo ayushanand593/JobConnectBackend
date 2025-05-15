@@ -31,6 +31,8 @@ import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import com.DcoDe.jobconnect.exceptions.FileNotFoundException;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -281,8 +283,8 @@ private String getFileNameFromFileId(String fileId) {
         return fileDocument.getFileName();
     } catch (Exception e) {
         // Log the error
-        System.err.println("Error getting file name for fileId: " + fileId + " - " + e.getMessage());
-        return "File Not Found"; // Or some other default value
+        // log.error("Error getting file name for fileId: {}", fileId, e);
+        throw new FileNotFoundException("File not found with ID: " + fileId, e);
     }
 }
 

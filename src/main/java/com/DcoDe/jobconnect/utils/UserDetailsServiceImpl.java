@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
      
      @Autowired
@@ -26,16 +29,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("Attempting to load user: " + username);
+         log.debug("Attempting to load user: {}", username);
         
         // Find user by email/username
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> {
-                    System.out.println("User not found: " + username);
+                      log.warn("User not found: {}", username);
                     return new UsernameNotFoundException("User not found: " + username);
                 });
         
-        System.out.println("User found: " + user.getEmail() + ", roles: " + user.getRole());
+         log.debug("User found: {}, roles: {}", user.getEmail(), user.getRole());
         
         // Use your CustomUserDetails implementation
         Collection<GrantedAuthority> authorities = new ArrayList<>();

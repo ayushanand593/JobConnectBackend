@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
-import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO.ApplicationSummaryDTO;
-import com.DcoDe.jobconnect.entities.Candidate;
 import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
@@ -256,7 +254,7 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
 private JobApplicationDetailDTO mapToJobApplicationDetailDTO(JobApplication application) {
     Job job = application.getJob();
-    Candidate candidate = application.getCandidate();
+    // Candidate candidate = application.getCandidate();
 
     return JobApplicationDetailDTO.builder()
         .id(application.getId())

@@ -27,7 +27,6 @@ import com.DcoDe.jobconnect.repositories.SkillRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
-import org.springframework.web.multipart.MultipartFile;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;

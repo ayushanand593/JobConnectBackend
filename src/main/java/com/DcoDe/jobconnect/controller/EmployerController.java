@@ -2,7 +2,6 @@ package com.DcoDe.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,7 +27,6 @@ import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
@@ -65,7 +63,7 @@ public class EmployerController {
         
     @PostMapping("/register")
     public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
-        Company company = companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
+        companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Company not found with ID: " + dto.getCompanyUniqueId()

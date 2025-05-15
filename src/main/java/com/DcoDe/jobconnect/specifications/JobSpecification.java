@@ -60,7 +60,7 @@ public class JobSpecification {
             }
 
             // Search by skills
-            if (searchRequest.getSkills() != null && !searchRequest.getSkills().isEmpty()) {
+            if (query!=null && searchRequest.getSkills() != null && !searchRequest.getSkills().isEmpty()) {
                 // Need to use distinct to avoid duplicate results when searching by skills
                 query.distinct(true);
                 

@@ -5,8 +5,6 @@ import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.dto.*;
 
 
-
-import java.util.Map;
 import java.util.Optional;
 
 public interface CompanyServiceI {

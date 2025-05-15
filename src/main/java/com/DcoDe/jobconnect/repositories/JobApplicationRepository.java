@@ -1,6 +1,4 @@
 package com.DcoDe.jobconnect.repositories;
-
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.entities.JobApplication;
 
 import java.util.Collection;

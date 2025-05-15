@@ -24,6 +24,7 @@ public class JobDTO {
     private String salaryRange;
     private List<SkillDTO> skills;
     private JobStatus status;
+    private List<DisclosureQuestionDTO> disclosureQuestions;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

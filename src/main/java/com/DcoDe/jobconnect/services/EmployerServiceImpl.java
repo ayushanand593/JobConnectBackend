@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
@@ -169,6 +170,19 @@ public void deleteEmployerById(Long employerId) {
     if (job.getCompany() != null) {
         dto.setCompanyName(job.getCompany().getCompanyName());
         dto.setCompanyId(job.getCompany().getId());
+    }
+
+     if (job.getDisclosureQuestions() != null) {
+        List<DisclosureQuestionDTO> questionDTOs = job.getDisclosureQuestions().stream()
+                .map(question -> {
+                    DisclosureQuestionDTO questionDTO = new DisclosureQuestionDTO();
+                    questionDTO.setId(question.getId());
+                    questionDTO.setQuestionText(question.getQuestionText());
+                    questionDTO.setIsRequired(question.getIsRequired());
+                    return questionDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setDisclosureQuestions(questionDTOs);
     }
 
     return dto;

@@ -25,4 +25,6 @@ public class JobCreateDTO {
     private String responsibilities;
     private String salaryRange;
     private List<String> skills;
+
+    private List<DisclosureQuestionDTO> disclosureQuestions;
 }

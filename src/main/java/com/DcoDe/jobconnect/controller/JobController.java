@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
 import com.DcoDe.jobconnect.dto.JobSearchRequestDTO;
 import com.DcoDe.jobconnect.dto.JobSearchResponseDTO;
 import com.DcoDe.jobconnect.enums.JobType;
@@ -114,6 +116,28 @@ public class JobController  {
         
         Page<JobSearchResponseDTO> results = jobSearchService.searchJobs(searchRequest);
         return ResponseEntity.ok(results);
+    }
+
+
+    /**
+     * Get disclosure questions for a job
+     */
+    @GetMapping("/{jobId}/disclosure-questions")
+    public ResponseEntity<JobDisclosureQuestionsDTO> getJobDisclosureQuestions(@PathVariable String jobId) {
+        JobDisclosureQuestionsDTO questions = jobService.getJobDisclosureQuestions(jobId);
+        return ResponseEntity.ok(questions);
+    }
+    
+    /**
+     * Add or update disclosure questions for a job (for employers)
+     */
+    @PostMapping("/{jobId}/disclosure-questions")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ResponseEntity<JobDTO> updateJobDisclosureQuestions(
+            @PathVariable String jobId, 
+            @RequestBody List<DisclosureQuestionDTO> questions) {
+        JobDTO updatedJob = jobService.updateJobDisclosureQuestions(jobId, questions);
+        return ResponseEntity.ok(updatedJob);
     }
 
    

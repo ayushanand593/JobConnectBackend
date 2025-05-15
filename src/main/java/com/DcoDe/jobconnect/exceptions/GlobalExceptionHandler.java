@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
 
 // Handle CompanyNotFoundException
      @ExceptionHandler(CompanyNotFoundException.class)
-    public ResponseEntity<Object> handleCompanyNotFoundException(UsernameNotFoundException ex, WebRequest request) {
+    public ResponseEntity<Object> handleCompanyNotFoundException(CompanyNotFoundException ex, WebRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.UNAUTHORIZED.value());
@@ -154,7 +154,7 @@ public class GlobalExceptionHandler {
 
     // Handle InvalidImageException
      @ExceptionHandler(InvalidImageException.class)
-    public ResponseEntity<Object> handleInvalidImageException(UsernameNotFoundException ex, WebRequest request) {
+    public ResponseEntity<Object> handleInvalidImageException(InvalidImageException ex, WebRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.UNAUTHORIZED.value());

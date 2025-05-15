@@ -81,6 +81,9 @@ public class Job {
     @EqualsAndHashCode.Exclude  // Add this to prevent issues with equals/hashCode
     private List<JobApplication> applications = new ArrayList<>();
 
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DisclosureQuestion> disclosureQuestions = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

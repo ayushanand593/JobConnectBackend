@@ -3,20 +3,28 @@ package com.DcoDe.jobconnect.services;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.DisclosureAnswerDTO;
+import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
 import com.DcoDe.jobconnect.dto.SkillDTO;
 import com.DcoDe.jobconnect.entities.Candidate;
+import com.DcoDe.jobconnect.entities.DisclosureAnswer;
+import com.DcoDe.jobconnect.entities.DisclosureQuestion;
 import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
@@ -26,6 +34,8 @@ import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.JobType;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.repositories.CandidateRepository;
+import com.DcoDe.jobconnect.repositories.DisclosureAnswerRepository;
+import com.DcoDe.jobconnect.repositories.DisclosureQuestionRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.repositories.SkillRepository;
@@ -33,6 +43,7 @@ import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,6 +54,13 @@ public class JobServiceImpl implements JobServiceI {
     private final SkillRepository skillRepository;
     private final CandidateRepository candidateRepository;
     private final JobApplicationRepository jobApplicationRepository;
+
+    @Autowired
+    private DisclosureQuestionRepository disclosureQuestionRepository;
+    
+    @Autowired 
+    private DisclosureAnswerRepository disclosureAnswerRepository;
+
     private final FileStorageServiceI fileStorageService;
 
      @Override
@@ -52,24 +70,23 @@ public class JobServiceImpl implements JobServiceI {
     if (currentUser == null || currentUser.getCompany() == null) {
         throw new AccessDeniedException("Not authorized to create jobs");
     }
-
-        // Create new job entity
-         Job job = new Job();
-    job.setTitle(jobDto.getTitle());
-    job.setLocation(jobDto.getLocation());
-    job.setJobType(JobType.valueOf(jobDto.getJobType()));
-    job.setExperienceLevel(jobDto.getExperienceLevel()); // Changed field name
-    job.setDescription(jobDto.getDescription());
-    // Don't set requirements and responsibilities if they're not in the DTO
-    job.setRequirements(jobDto.getRequirements());
-    job.setResponsibilities(jobDto.getResponsibilities());
-    job.setSalaryRange(jobDto.getSalaryRange());
-    job.setStatus(JobStatus.OPEN);
-    job.setCompany(currentUser.getCompany());
-    job.setPostedBy(currentUser);
+    
+    // Create new job entity
+      Job job = new Job();
+        job.setTitle(jobDto.getTitle());
+        job.setLocation(jobDto.getLocation());
+        job.setJobType(JobType.valueOf(jobDto.getJobType()));
+        job.setExperienceLevel(jobDto.getExperienceLevel());
+        job.setDescription(jobDto.getDescription());
+        job.setRequirements(jobDto.getRequirements());
+        job.setResponsibilities(jobDto.getResponsibilities());
+        job.setSalaryRange(jobDto.getSalaryRange());
+        job.setStatus(JobStatus.OPEN);
+        job.setCompany(currentUser.getCompany());
+        job.setPostedBy(currentUser);
 
         // Generate a unique job ID
-        job.setJobId(generateJobId(currentUser.getCompany().getCompanyName(), jobDto.getTitle()));
+          job.setJobId(generateJobId(currentUser.getCompany().getCompanyName(), jobDto.getTitle()));
 
         // Handle skills
        if (jobDto.getSkills() != null && !jobDto.getSkills().isEmpty()) {
@@ -95,6 +112,9 @@ public class JobServiceImpl implements JobServiceI {
         // Ensure we have an empty set rather than null
         job.setSkills(new HashSet<>());
     }
+
+    // Handle disclosure questions
+        addDisclosureQuestionsToJob(job, jobDto.getDisclosureQuestions());
 
         // Save job
         job = jobRepository.save(job);
@@ -193,9 +213,40 @@ public class JobServiceImpl implements JobServiceI {
             String coverLetterFileId = fileStorageService.uploadFile(coverLetterFile);
             application.setCoverLetterFileId(coverLetterFileId);
         }
-
-        // Save application
+        if (applicationCreateDTO.getDisclosureAnswers() != null) {
+        // Validate that all required questions are answered
+        validateDisclosureAnswers(job.getDisclosureQuestions(), applicationCreateDTO.getDisclosureAnswers());
+        
+        // Save application first so we can reference it
         application = jobApplicationRepository.save(application);
+        
+        // Save answers
+        for (DisclosureAnswerDTO answerDTO : applicationCreateDTO.getDisclosureAnswers()) {
+            DisclosureQuestion question = disclosureQuestionRepository.findById(answerDTO.getQuestionId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Disclosure question not found"));
+            
+            // Verify question belongs to this job
+            if (!question.getJob().getId().equals(job.getId())) {
+                throw new IllegalArgumentException("Question does not belong to this job");
+            }
+            
+            DisclosureAnswer answer = new DisclosureAnswer();
+            answer.setJobApplication(application);
+            answer.setQuestion(question);
+            answer.setAnswerText(answerDTO.getAnswerText());
+            answer.setCreatedAt(LocalDateTime.now());
+            
+            disclosureAnswerRepository.save(answer);
+        }
+    } else {
+        // Check if job has required disclosure questions
+        if (job.getDisclosureQuestions().stream().anyMatch(DisclosureQuestion::getIsRequired)) {
+            throw new IllegalArgumentException("This job requires answers to disclosure questions");
+        }
+        
+        // Save application if no disclosure answers are needed
+        application = jobApplicationRepository.save(application);
+    }
 
         return mapToJobApplicationDTO(application);
     }
@@ -218,6 +269,84 @@ public class JobServiceImpl implements JobServiceI {
 
         job.setStatus(status);
         jobRepository.save(job);
+    }
+
+
+    @Override
+       public JobDisclosureQuestionsDTO getJobDisclosureQuestions(String jobId) {
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                
+        JobDisclosureQuestionsDTO dto = new JobDisclosureQuestionsDTO();
+        dto.setJobId(job.getJobId());
+        dto.setJobTitle(job.getTitle());
+        dto.setCompanyName(job.getCompany().getCompanyName());
+        
+        List<DisclosureQuestionDTO> questionDTOs = job.getDisclosureQuestions().stream()
+                .map(this::mapToDisclosureQuestionDTO)
+                .collect(Collectors.toList());
+        
+        dto.setDisclosureQuestions(questionDTOs);
+        
+        return dto;
+    }
+
+    @Override
+@Transactional
+public JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestionDTO> questions) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null || currentUser.getCompany() == null) {
+        throw new AccessDeniedException("Not authorized to update job questions");
+    }
+    
+    Job job = jobRepository.findByJobId(jobId)
+            .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+    
+    // Verify the job belongs to the current user's company
+    if (!job.getCompany().getId().equals(currentUser.getCompany().getId())) {
+        throw new AccessDeniedException("Not authorized to update this job's questions");
+    }
+    
+    // Clear existing questions
+    job.getDisclosureQuestions().clear();
+    
+    // Add new questions
+    if (questions != null) {
+        for (DisclosureQuestionDTO questionDTO : questions) {
+            DisclosureQuestion question = new DisclosureQuestion();
+            question.setJob(job);
+            question.setQuestionText(questionDTO.getQuestionText());
+            question.setIsRequired(questionDTO.getIsRequired() != null ? questionDTO.getIsRequired() : true);
+            question.setCreatedAt(LocalDateTime.now());
+            question.setUpdatedAt(LocalDateTime.now());
+            
+            job.getDisclosureQuestions().add(question);
+        }
+    }
+    
+    // Save job with updated questions
+    job = jobRepository.save(job);
+    
+    return mapToJobDTO(job);
+}
+
+     private void addDisclosureQuestionsToJob(Job job, List<DisclosureQuestionDTO> disclosureQuestionDTOs) {
+        if (disclosureQuestionDTOs != null && !disclosureQuestionDTOs.isEmpty()) {
+            // Clear existing questions
+            job.getDisclosureQuestions().clear();
+            
+            // Add new questions
+            for (DisclosureQuestionDTO questionDTO : disclosureQuestionDTOs) {
+                DisclosureQuestion question = new DisclosureQuestion();
+                question.setJob(job);
+                question.setQuestionText(questionDTO.getQuestionText());
+                question.setIsRequired(questionDTO.getIsRequired() != null ? questionDTO.getIsRequired() : true);
+                question.setCreatedAt(LocalDateTime.now());
+                question.setUpdatedAt(LocalDateTime.now());
+                
+                job.getDisclosureQuestions().add(question);
+            }
+        }
     }
 
     private JobDTO mapToJobDTO(Job job) {
@@ -251,6 +380,19 @@ public class JobServiceImpl implements JobServiceI {
             dto.setSkills(skillDTOs);
         }
 
+         if (job.getDisclosureQuestions() != null) {
+        List<DisclosureQuestionDTO> questionDTOs = job.getDisclosureQuestions().stream()
+                .map(question -> {
+                    DisclosureQuestionDTO questionDTO = new DisclosureQuestionDTO();
+                    questionDTO.setId(question.getId());
+                    questionDTO.setQuestionText(question.getQuestionText());
+                    questionDTO.setIsRequired(question.getIsRequired());
+                    return questionDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setDisclosureQuestions(questionDTOs);
+    }
+
         return dto;
     }
 
@@ -278,7 +420,7 @@ public class JobServiceImpl implements JobServiceI {
                 job.getSkills().add(skill);
             }
         }
-
+        addDisclosureQuestionsToJob(job, jobDto.getDisclosureQuestions());
         // Save updated job
         job = jobRepository.save(job);
 
@@ -317,6 +459,20 @@ private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
             }
         }
 
+         List<DisclosureAnswer> answers = disclosureAnswerRepository.findAllByJobApplicationId(application.getId());
+    if (answers != null && !answers.isEmpty()) {
+        List<DisclosureAnswerDTO> answerDTOs = answers.stream()
+                .map(answer -> {
+                    DisclosureAnswerDTO answerDTO = new DisclosureAnswerDTO();
+                    answerDTO.setQuestionId(answer.getQuestion().getId());
+                    answerDTO.setQuestionText(answer.getQuestion().getQuestionText());
+                    answerDTO.setAnswerText(answer.getAnswerText());
+                    return answerDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setDisclosureAnswers(answerDTOs);
+    }
+
         return dto;
     }
 
@@ -327,4 +483,27 @@ private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
         return baseId + "-" + timestamp;
     }
 
+    private DisclosureQuestionDTO mapToDisclosureQuestionDTO(DisclosureQuestion question) {
+        DisclosureQuestionDTO dto = new DisclosureQuestionDTO();
+        dto.setId(question.getId());
+        dto.setQuestionText(question.getQuestionText());
+        dto.setIsRequired(question.getIsRequired());
+        return dto;
+    }
+    // Validate that all required questions are answered
+private void validateDisclosureAnswers(List<DisclosureQuestion> questions, List<DisclosureAnswerDTO> answers) {
+    // Create a map of questionId -> answerDTO for easy lookup
+    Map<Long, DisclosureAnswerDTO> answerMap = answers.stream()
+            .collect(Collectors.toMap(DisclosureAnswerDTO::getQuestionId, Function.identity()));
+    
+    // Check that all required questions have answers
+    for (DisclosureQuestion question : questions) {
+        if (question.getIsRequired()) {
+            DisclosureAnswerDTO answer = answerMap.get(question.getId());
+            if (answer == null || StringUtils.isBlank(answer.getAnswerText())) {
+                throw new IllegalArgumentException("Required question not answered: " + question.getQuestionText());
+            }
+        }
+    }
+}
 }

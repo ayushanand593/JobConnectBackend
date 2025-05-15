@@ -6,7 +6,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "job_applications")
@@ -39,6 +42,9 @@ public class JobApplication {
     
     @Column(name = "voluntary_disclosures")
     private String voluntaryDisclosures;
+
+    @OneToMany(mappedBy = "jobApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DisclosureAnswer> disclosureAnswers = new ArrayList<>();
     
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

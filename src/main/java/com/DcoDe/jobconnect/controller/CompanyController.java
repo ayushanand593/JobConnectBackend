@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,6 +57,7 @@ public class CompanyController {
     }
 
      @PostMapping("/{companyUniqueId}/logo")
+     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyLogo(
             @PathVariable String companyUniqueId,
             @RequestParam("file") MultipartFile file) {
@@ -67,6 +69,7 @@ public class CompanyController {
     }
     
     @PostMapping("/{companyUniqueId}/banner")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyBanner(
             @PathVariable String companyUniqueId,
             @RequestParam("file") MultipartFile file) {
@@ -77,20 +80,20 @@ public class CompanyController {
                 .body(new ImageUploadResponseDTO(fileId, "Banner uploaded successfully"));
     }
     
-    @GetMapping("/images/{fileId}")
-    public ResponseEntity<byte[]> getImage(@PathVariable String fileId) {
-        try {
-            FileDocument fileDocument = fileStorageService.getFile(fileId);
-            byte[] imageData = fileStorageService.getFileData(fileId);
+    // @GetMapping("/images/{fileId}")
+    // public ResponseEntity<byte[]> getImage(@PathVariable String fileId) {
+    //     try {
+    //         FileDocument fileDocument = fileStorageService.getFile(fileId);
+    //         byte[] imageData = fileStorageService.getFileData(fileId);
             
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(fileDocument.getContentType()));
-            headers.setContentLength(imageData.length);
+    //         HttpHeaders headers = new HttpHeaders();
+    //         headers.setContentType(MediaType.parseMediaType(fileDocument.getContentType()));
+    //         headers.setContentLength(imageData.length);
             
-            return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+    //         return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
+    //     } catch (RuntimeException e) {
+    //         return ResponseEntity.notFound().build();
+    //     }
+    // }
 
 }

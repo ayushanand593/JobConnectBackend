@@ -1,9 +1,11 @@
 package com.DcoDe.jobconnect.services;
 
+import com.DcoDe.jobconnect.dto.DisclosureAnswerDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
 import com.DcoDe.jobconnect.entities.Candidate;
+import com.DcoDe.jobconnect.entities.DisclosureAnswer;
 import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
@@ -11,6 +13,7 @@ import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.repositories.CandidateRepository;
+import com.DcoDe.jobconnect.repositories.DisclosureAnswerRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
@@ -36,6 +39,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
     private final JobRepository jobRepository;
     private final CandidateRepository candidateRepository;
     private final FileStorageServiceI fileStorageService;
+    private final DisclosureAnswerRepository disclosureAnswerRepository;
     private final JobApplicationRepository applicationRepository;
 
     /**
@@ -258,6 +262,20 @@ public void updateApplicationStatus(Long id, ApplicationStatus status) {
                 // Log error but don't fail
             }
         }
+
+         List<DisclosureAnswer> answers = disclosureAnswerRepository.findAllByJobApplicationId(application.getId());
+    if (answers != null && !answers.isEmpty()) {
+        List<DisclosureAnswerDTO> answerDTOs = answers.stream()
+                .map(answer -> {
+                    DisclosureAnswerDTO answerDTO = new DisclosureAnswerDTO();
+                    answerDTO.setQuestionId(answer.getQuestion().getId());
+                    answerDTO.setQuestionText(answer.getQuestion().getQuestionText());
+                    answerDTO.setAnswerText(answer.getAnswerText());
+                    return answerDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setDisclosureAnswers(answerDTOs);
+    }
         
         return dto;
     }

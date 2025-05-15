@@ -148,7 +148,9 @@ public class CompanyServiceImpl implements CompanyServiceI {
         dto.setSize(company.getSize());
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
-        dto.setLogoUrl(company.getLogoUrl());
+        // dto.setLogoUrl(company.getLogoUrl());
+        dto.setLogoUrl(company.getLogoFileId());
+        dto.setBannerUrl(company.getBannerFileId());
         dto.setCreatedAt(company.getCreatedAt());
         return dto;
     }

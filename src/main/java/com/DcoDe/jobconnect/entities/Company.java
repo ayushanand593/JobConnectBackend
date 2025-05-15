@@ -1,7 +1,6 @@
 package com.DcoDe.jobconnect.entities;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -32,6 +31,13 @@ public class Company {
 
     @Column(name = "logo_url")
     private String logoUrl;
+     @Column(name = "logo_file_id")
+    private String logoFileId;
+    
+    // Added field for company banner
+    @Column(name = "banner_file_id")
+    private String bannerFileId;
+
 
 
 //    @EqualsAndHashCode.Exclude

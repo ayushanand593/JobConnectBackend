@@ -13,5 +13,18 @@ public class CompanyDetailDTO {
     private String website;
     private String description;
     private String logoUrl;
+    private String bannerUrl;
     private LocalDateTime createdAt;
+
+    //  public void setLogoFileId(String logoFileId) {
+    //     if (logoFileId != null) {
+    //         this.logoUrl = "/api/companies/images/" + logoFileId;
+    //     }
+    // }
+    
+    // public void setBannerFileId(String bannerFileId) {
+    //     if (bannerFileId != null) {
+    //         this.bannerUrl = "/api/companies/images/" + bannerFileId;
+    //     }
+    // }
 }

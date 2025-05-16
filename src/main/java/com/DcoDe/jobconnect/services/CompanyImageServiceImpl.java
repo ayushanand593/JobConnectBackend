@@ -8,6 +8,8 @@ import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -104,7 +106,7 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
         // Create a wrapper MultipartFile with the resized data
         MultipartFile resizedFile = new MultipartFile() {
             @Override
-            public String getName() {
+            public @NonNull String getName() {
                 return originalFile.getName();
             }
 
@@ -129,17 +131,17 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
             }
 
             @Override
-            public byte[] getBytes() {
+            public @NonNull byte[] getBytes() {
                 return resizedData;
             }
 
             @Override
-            public java.io.InputStream getInputStream() {
+            public @NonNull java.io.InputStream getInputStream() {
                 return new ByteArrayInputStream(resizedData);
             }
 
             @Override
-            public void transferTo(java.io.File dest) throws IOException, IllegalStateException {
+            public  void transferTo( @NonNull java.io.File dest) throws IOException, IllegalStateException {
                 throw new UnsupportedOperationException("Transfer operation not supported");
             }
         };

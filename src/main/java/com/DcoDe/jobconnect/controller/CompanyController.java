@@ -1,8 +1,6 @@
 package com.DcoDe.jobconnect.controller;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,10 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
 import com.DcoDe.jobconnect.dto.ImageUploadResponseDTO;
-import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
+// import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class CompanyController {
 
      private final CompanyServiceI companyService;
-     private final FileStorageServiceI fileStorageService;
+    //  private final FileStorageServiceI fileStorageService;
      private final CompanyImageServiceI companyImageService;
 
     // @PostMapping("/register")

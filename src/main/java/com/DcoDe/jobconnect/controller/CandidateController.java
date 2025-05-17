@@ -30,12 +30,15 @@ import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/candidate")
 @RequiredArgsConstructor
+@Tag(name="Candidate", description = "API for managing candidate profiles and job applications.")
 public class CandidateController {
 
         private final CandidateServiceI candidateService;
@@ -46,6 +49,7 @@ public class CandidateController {
 
 
           @PostMapping("/register")
+          @Operation(summary = "Register a new candidate")
     public ResponseEntity<CandidateProfileDTO> registerCandidate(
             @Valid @RequestBody CandidateRegistrationDTO dto) {
         
@@ -63,17 +67,20 @@ public class CandidateController {
     }
 
     @GetMapping("/profile")
+    @Operation(summary = "Get the current candidate's profile")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> getCurrentProfile() {
         return ResponseEntity.ok(candidateService.getCurrentCandidateProfile());
     }
 
      @GetMapping("/{id}")
+     @Operation(summary = "Get candidate profile by ID")
     public ResponseEntity<CandidateProfileDTO> getCandidateById(@PathVariable Long id) {
         return ResponseEntity.ok(candidateService.getCandidateById(id));
     }
 
     @PutMapping("/profile-update")
+    @Operation(summary = "Update the current candidate's profile")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> updateProfile(
             @Valid @RequestBody CandidateProfileUpdateDTO profileDTO) {
@@ -86,6 +93,7 @@ public class CandidateController {
     }
 
      @DeleteMapping("/delete/{id}")
+     @Operation(summary = "Delete candidate profile by ID")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<String> deleteCandidate(@PathVariable Long id) {
         candidateService.deleteCandidateById(id);
@@ -93,12 +101,14 @@ public class CandidateController {
     }
 
      @PostMapping("/resume")
+     @Operation(summary = "Upload resume for the current candidate")
     @PreAuthorize("hasRole('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> uploadResume(
             @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(candidateService.uploadResume(file));
     }
      @GetMapping("/dashboard")
+     @Operation(summary = "Get candidate dashboard statistics")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -116,17 +126,20 @@ public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
 }
 
 @GetMapping("/view/applications")
+@Operation(summary = "Get all job applications for the current candidate")
 @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
     return ResponseEntity.ok(dashboardService.getCandidateApplications());
 }
 @GetMapping("/view/applications/{applicationId}")
+@Operation(summary = "Get job application details for the current candidate")
 @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<JobApplicationDetailDTO> getCandidateApplicationDetail(@PathVariable Long applicationId) {
     return ResponseEntity.ok(dashboardService.getCandidateApplicationDetail(applicationId));
 }
 
 @DeleteMapping("/withdraw/applications/{applicationId}")
+@Operation(summary = "Withdraw a job application for the current candidate")
 @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<String> withdrawApplication(@PathVariable Long applicationId) {
    jobApplicationService.withdrawApplication(applicationId);

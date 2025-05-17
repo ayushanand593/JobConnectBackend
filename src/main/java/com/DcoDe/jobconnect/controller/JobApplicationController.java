@@ -5,6 +5,8 @@ import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
 import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,12 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/applications")
 @RequiredArgsConstructor
+@Tag(name = "Job Application", description = "API for managing job applications.")
 public class JobApplicationController {
 
     private final JobApplicationServiceI jobApplicationService;
 
     @PostMapping
     @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Submit a job application")
     public ResponseEntity<JobApplicationDTO> submitApplication(
             @RequestPart("applicationData") JobApplicationSubmissionDTO submissionDTO,
             @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
@@ -53,6 +57,7 @@ public class JobApplicationController {
     
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Update the status of a job application")
     public ResponseEntity<JobApplicationDTO> updateApplicationStatus(
             @PathVariable Long id,
             @RequestBody JobApplicationUpdateDTO updateDTO) {
@@ -62,6 +67,7 @@ public class JobApplicationController {
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Withdraw a job application")
     public ResponseEntity<Void> withdrawApplication(@PathVariable Long id) {
         jobApplicationService.withdrawApplication(id);
         return ResponseEntity.noContent().build();

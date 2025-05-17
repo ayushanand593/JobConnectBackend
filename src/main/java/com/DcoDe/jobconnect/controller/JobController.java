@@ -29,12 +29,15 @@ import com.DcoDe.jobconnect.enums.JobType;
 import com.DcoDe.jobconnect.services.interfaces.JobSearchServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
+@Tag(name = "Job", description = "API for managing job postings and applications.")
 public class JobController  {
 
     private final JobServiceI jobService;
@@ -48,18 +51,21 @@ public class JobController  {
 
     @PostMapping("/create-job")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Create a new job posting")
     public ResponseEntity<JobDTO> createJob(@Valid @RequestBody JobCreateDTO jobDto) {
         JobDTO createdJob = jobService.createJob(jobDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }
 
      @GetMapping("/jobId/{jobId}")
+     @Operation(summary = "Get job details by job ID")
     public ResponseEntity<JobDTO> getJobByJobId(@PathVariable String jobId) {
         return ResponseEntity.ok(jobService.getJobByJobId(jobId));
     }
 
        @PutMapping("/jobId/{jobId}")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Update job details by job ID")
     public ResponseEntity<JobDTO> updateJobByJobId(
             @PathVariable String jobId,
             @Valid @RequestBody JobCreateDTO jobDto) {
@@ -68,12 +74,14 @@ public class JobController  {
 
     @DeleteMapping("/jobId/{jobId}")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Delete job by job ID")
     public ResponseEntity<String> deleteJobByJobId(@PathVariable String jobId) {
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");
     }
     @PostMapping("/apply/{jobId}")
     @PreAuthorize("hasAuthority('CANDIDATE')")
+    @Operation(summary = "Apply to a job")
     public ResponseEntity<JobApplicationDTO> applyToJob(
             @PathVariable String jobId,
             @RequestPart("applicationData") @Valid JobApplicationSubmissionDTO applicationCreateDTO,
@@ -84,12 +92,14 @@ public class JobController  {
     }
 
      @PostMapping("/search")
+     @Operation(summary = "Search for jobs")
     public ResponseEntity<Page<JobSearchResponseDTO>> searchJobs(@RequestBody JobSearchRequestDTO searchRequest) {
         Page<JobSearchResponseDTO> results = jobSearchService.searchJobs(searchRequest);
         return ResponseEntity.ok(results);
     }
     
     @GetMapping("/search")
+    @Operation(summary = "Search for jobs using query parameters")
     public ResponseEntity<Page<JobSearchResponseDTO>> searchJobsGet(
             @RequestParam(required = false) String companyName,
             @RequestParam(required = false) String jobTitle,
@@ -123,6 +133,7 @@ public class JobController  {
      * Get disclosure questions for a job
      */
     @GetMapping("/{jobId}/disclosure-questions")
+    @Operation(summary = "Get disclosure questions for a job")
     public ResponseEntity<JobDisclosureQuestionsDTO> getJobDisclosureQuestions(@PathVariable String jobId) {
         JobDisclosureQuestionsDTO questions = jobService.getJobDisclosureQuestions(jobId);
         return ResponseEntity.ok(questions);
@@ -133,6 +144,7 @@ public class JobController  {
      */
     @PostMapping("/{jobId}/disclosure-questions")
     @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Add or update disclosure questions for a job")
     public ResponseEntity<JobDTO> updateJobDisclosureQuestions(
             @PathVariable String jobId, 
             @RequestBody List<DisclosureQuestionDTO> questions) {

@@ -38,12 +38,15 @@ import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/employer")
 @RequiredArgsConstructor
+@Tag(name = "Employer", description = "API for managing employer profiles and job applications.")
 public class EmployerController {
 
     @Autowired
@@ -62,6 +65,7 @@ public class EmployerController {
     private final JobServiceI  jobService;
         
     @PostMapping("/register")
+    @Operation(summary = "Register a new employer")
     public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
         companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
                 .orElseThrow(() -> new ResponseStatusException(
@@ -73,6 +77,7 @@ public class EmployerController {
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Get the current employer's profile")
     public ResponseEntity<EmployerProfileDTO> getMyProfile() {
         // Get the current authenticated user
         User currentUser = SecurityUtils.getCurrentUser();
@@ -92,6 +97,7 @@ public class EmployerController {
 
      @PutMapping("/profile-update")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Update the current employer's profile")
     public ResponseEntity<EmployerProfileDTO> updateProfile(
             @Valid @RequestBody EmployerProfileUpdateDTO dto) {
         // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -106,6 +112,7 @@ public class EmployerController {
 
     @DeleteMapping("/delete/{employerId}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    @Operation(summary = "Delete employer profile by ID")
     public ResponseEntity<String> deleteEmployer(@PathVariable Long employerId) {
     employerService.deleteEmployerById(employerId);
     return ResponseEntity.ok("Employer deleted successfully.");
@@ -113,6 +120,7 @@ public class EmployerController {
 
 @GetMapping("/dashboard")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Get employer dashboard statistics")
     public ResponseEntity<EmployerDashboardStatsDTO> getEmployerDashboardStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -130,6 +138,7 @@ public class EmployerController {
 
    @GetMapping("/my-jobs")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Get all jobs posted by the current employer")
 public ResponseEntity<List<JobDTO>> getMyJobs() {
     User currentUser = SecurityUtils.getCurrentUser();
     if (currentUser == null) {
@@ -141,6 +150,7 @@ public ResponseEntity<List<JobDTO>> getMyJobs() {
 }
  @GetMapping("/applications/{jobId}")
 @PreAuthorize("hasRole('EMPLOYER')")
+@Operation(summary = "Get all job applications for a specific job")
 public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariable String jobId) {
     List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
     return ResponseEntity.ok(applications);
@@ -148,6 +158,7 @@ public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariab
 
  @PatchMapping("/jobId/{jobId}/status")
     @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Change the status of a job by job ID")
     public ResponseEntity<Void> changeJobStatusByJobId(
             @PathVariable String jobId,
             @RequestParam JobStatus status) {
@@ -178,6 +189,7 @@ public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariab
 // }
 @PatchMapping("/application/{id}/status")
 @PreAuthorize("hasRole('EMPLOYER')")
+@Operation(summary = "Update the status of a job application")
 public ResponseEntity<Void> updateApplicationStatus(
         @PathVariable Long id,
         @RequestParam ApplicationStatus status) {

@@ -19,12 +19,15 @@ import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 // import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
+@Tag(name="Company", description = "API for managing company profiles and images.")
 public class CompanyController {
 
      private final CompanyServiceI companyService;
@@ -43,18 +46,21 @@ public class CompanyController {
     // }
 
      @PostMapping("/register")
+     @Operation(summary = "Register a new company")
     public ResponseEntity<CompanyDetailDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
         CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(registeredCompany);
     }
 
     @GetMapping("/{companyUniqueId}")
+    @Operation(summary = "Get company profile by unique ID")
     public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
         return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
     }
 
      @PostMapping("/{companyUniqueId}/logo")
      @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    @Operation(summary = "Upload company logo")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyLogo(
             @PathVariable String companyUniqueId,
             @RequestParam("file") MultipartFile file) {
@@ -67,6 +73,7 @@ public class CompanyController {
     
     @PostMapping("/{companyUniqueId}/banner")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    @Operation(summary = "Upload company banner")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyBanner(
             @PathVariable String companyUniqueId,
             @RequestParam("file") MultipartFile file) {

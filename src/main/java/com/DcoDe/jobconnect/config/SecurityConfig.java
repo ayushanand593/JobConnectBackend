@@ -1,15 +1,11 @@
 package com.DcoDe.jobconnect.config;
 
-import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,20 +16,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.DcoDe.jobconnect.security.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-      @Autowired
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,35 +40,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     // Permit public endpoints
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("api/jobs/jobId/{jobId}").permitAll()
-                    .requestMatchers("api/jobs/search").permitAll()
-                    .requestMatchers("api/companies/**").permitAll()
-                    .requestMatchers("api/employer/register").permitAll()
-                    .requestMatchers("api/candidate/register").permitAll()
+                    .requestMatchers("/api/jobs/jobId/{jobId}").permitAll()
+                    .requestMatchers("/api/jobs/search").permitAll()
+                    .requestMatchers("/api/companies/**").permitAll()
+                    .requestMatchers("/api/employer/register").permitAll()
+                    .requestMatchers("/api/candidate/register").permitAll()
                     .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults())
-            .authenticationProvider(authenticationProvider());
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
-        // Add logging filter for debugging
-        http.addFilterBefore(new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(@NonNull HttpServletRequest request,@NonNull HttpServletResponse response,@NonNull FilterChain chain)
-                    throws ServletException, IOException {
-                System.out.println("Request received: " + request.getMethod() + " " + request.getRequestURI());
-                System.out.println("Authorization header: " + request.getHeader("Authorization"));
-                
-                try {
-                    chain.doFilter(request, response);
-                } catch (Exception e) {
-                    System.out.println("Exception in filter chain: " + e.getMessage());
-                    throw e;
-                }
-                
-                System.out.println("Response status: " + response.getStatus());
-            }
-        }, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 

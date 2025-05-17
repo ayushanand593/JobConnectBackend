@@ -1,7 +1,7 @@
 package com.DcoDe.jobconnect.services.interfaces;
 
-import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
 import com.DcoDe.jobconnect.entities.Company;
+import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.dto.*;
 
 
@@ -14,6 +14,10 @@ public interface CompanyServiceI {
     // CompanyDetailDTO getCurrentCompanyProfile();
     // CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO);
     EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto);
+
+    User findCompanyAdminByEmail(String email);
+
+    User findEmployerByEmail(String email);
     // boolean isCompanyAdmin(User user, String companyName);
     // Page<CompanyDetailDTO> searchCompanies(String keyword, int page, int size);
 }

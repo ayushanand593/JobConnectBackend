@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -138,6 +139,17 @@ public class CompanyServiceImpl implements CompanyServiceI {
         return profileDTO;
     }
 
+       @Override
+public User findCompanyAdminByEmail(String email) {
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+}
+
+       @Override
+public User findEmployerByEmail(String email) {
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+}
     
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {
         CompanyDetailDTO dto = new CompanyDetailDTO();

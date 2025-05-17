@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -206,6 +207,12 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
 
         return mapToCandidateProfileDTO(candidate);
     }
+
+    @Override
+public User findUserByEmail(String email) {
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+}
 
 
     private CandidateProfileDTO mapToCandidateProfileDTO(Candidate candidate) {

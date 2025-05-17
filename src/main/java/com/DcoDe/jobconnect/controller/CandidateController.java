@@ -24,7 +24,9 @@ import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
+import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
@@ -47,24 +49,31 @@ public class CandidateController {
 
         private final JobApplicationServiceI jobApplicationService;
 
+         private final AuthServiceI authService;
 
-          @PostMapping("/register")
-          @Operation(summary = "Register a new candidate")
-    public ResponseEntity<CandidateProfileDTO> registerCandidate(
+
+        @PostMapping("/register")
+    @Operation(summary = "Register a new candidate")
+    public ResponseEntity<JwtResponseDTO> registerCandidate(
             @Valid @RequestBody CandidateRegistrationDTO dto) {
         
-        // Log the request to help diagnose issues
         System.out.println("Received candidate registration request for: " + dto.getEmail());
         
         try {
+            // Register the candidate
             CandidateProfileDTO result = candidateService.registerCandidate(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+            
+            // Auto-login by generating JWT token
+            User user = candidateService.findUserByEmail(dto.getEmail());
+            JwtResponseDTO authResponse = authService.generateTokenForUser(user);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
         } catch (Exception e) {
-            // Log the error
             System.err.println("Error registering candidate: " + e.getMessage());
             throw e;
         }
     }
+
 
     @GetMapping("/profile")
     @Operation(summary = "Get the current candidate's profile")

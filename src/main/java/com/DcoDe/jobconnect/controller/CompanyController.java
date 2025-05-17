@@ -15,6 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
 import com.DcoDe.jobconnect.dto.ImageUploadResponseDTO;
+import com.DcoDe.jobconnect.dto.JwtResponseDTO;
+import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 // import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
@@ -34,6 +37,8 @@ public class CompanyController {
     //  private final FileStorageServiceI fileStorageService;
      private final CompanyImageServiceI companyImageService;
 
+      private final AuthServiceI authService;
+
     // @PostMapping("/register")
     // public ResponseEntity<CompanyDetailDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
     //     CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
@@ -45,12 +50,17 @@ public class CompanyController {
     //     return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
     // }
 
-     @PostMapping("/register")
-     @Operation(summary = "Register a new company")
-    public ResponseEntity<CompanyDetailDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
-        CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(registeredCompany);
-    }
+  @PostMapping("/register")
+@Operation(summary = "Register a new company")
+public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
+    CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
+    
+    // Auto-login the company admin
+    User user = companyService.findCompanyAdminByEmail(dto.getEmail());
+    JwtResponseDTO authResponse = authService.generateTokenForUser(user);
+    
+    return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+}
 
     @GetMapping("/{companyUniqueId}")
     @Operation(summary = "Get company profile by unique ID")

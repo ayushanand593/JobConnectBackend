@@ -27,10 +27,12 @@ import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
+import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.UserRole;
+import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
@@ -63,17 +65,28 @@ public class EmployerController {
 
     @Autowired
     private final JobServiceI  jobService;
+
+    @Autowired
+     private final AuthServiceI authService;
         
-    @PostMapping("/register")
-    @Operation(summary = "Register a new employer")
-    public ResponseEntity<?> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
-        companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Company not found with ID: " + dto.getCompanyUniqueId()
-                ));
-        return ResponseEntity.ok(companyService.addEmployerToCompany(dto));
-    }
+   @PostMapping("/register")
+@Operation(summary = "Register a new employer")
+public ResponseEntity<JwtResponseDTO> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
+    companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found with ID: " + dto.getCompanyUniqueId()
+            ));
+    
+    // Register employer
+    Object result = companyService.addEmployerToCompany(dto);
+    
+    // Auto-login the employer
+    User user = companyService.findEmployerByEmail(dto.getEmail());
+    JwtResponseDTO authResponse = authService.generateTokenForUser(user);
+    
+    return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+}
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")

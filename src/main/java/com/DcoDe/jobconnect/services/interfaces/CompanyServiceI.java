@@ -4,20 +4,19 @@ import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.dto.*;
 
-
+import java.util.List;
 import java.util.Optional;
 
 public interface CompanyServiceI {
  CompanyDetailDTO registerCompany(CompanyRegistrationDTO dto);
     Optional<Company> findByCompanyUniqueId(String companyUniqueId);
     CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
-    // CompanyDetailDTO getCurrentCompanyProfile();
-    // CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO);
+  
     EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto);
 
     User findCompanyAdminByEmail(String email);
 
     User findEmployerByEmail(String email);
-    // boolean isCompanyAdmin(User user, String companyName);
-    // Page<CompanyDetailDTO> searchCompanies(String keyword, int page, int size);
+
+    List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId);
 }

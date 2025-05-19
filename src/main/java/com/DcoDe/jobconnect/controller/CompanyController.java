@@ -1,5 +1,7 @@
 package com.DcoDe.jobconnect.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
+import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.ImageUploadResponseDTO;
 import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.entities.Company;
@@ -124,6 +127,29 @@ public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody Compan
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ImageUploadResponseDTO(fileId, "Banner uploaded successfully"));
     }
+    
+  @GetMapping("/{companyUniqueId}/employees")
+@PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+@Operation(summary = "Get company employees")
+public ResponseEntity<List<EmployerProfileDTO>> getCompanyEmployees(
+        @PathVariable String companyUniqueId) {
+
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authorized");
+    }
+
+    Company company = companyService.findByCompanyUniqueId(companyUniqueId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+
+    // Check if the current user is an admin of the company
+    if (!company.getAdmins().contains(currentUser)) {
+        throw new AccessDeniedException("Not authorized to view employees for this company");
+    }
+    
+    List<EmployerProfileDTO> employees = companyService.getCompanyEmployees(companyUniqueId);
+    return ResponseEntity.ok(employees);
+}
     
     // @GetMapping("/images/{fileId}")
     // public ResponseEntity<byte[]> getImage(@PathVariable String fileId) {

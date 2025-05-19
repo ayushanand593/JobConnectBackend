@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.entities;
 import com.DcoDe.jobconnect.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -32,6 +33,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "company_id")
+    @JsonBackReference
     private Company company;  // For company role
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
@@ -41,6 +43,7 @@ public class User {
     private Candidate candidateProfile;  // For CANDIDATE role
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonBackReference
     private EmployerProfile employerProfile;  // For EMPLOYER role
 
     @Column(name = "created_at")

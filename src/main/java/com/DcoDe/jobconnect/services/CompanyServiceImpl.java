@@ -1,7 +1,9 @@
 package com.DcoDe.jobconnect.services;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -150,6 +152,16 @@ public User findEmployerByEmail(String email) {
     return userRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 }
+
+@Override
+public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
+    List<User> employees = userRepository.findWithProfilesByCompanyCompanyUniqueId(companyUniqueId);
+    
+    return employees.stream()
+        .map(this::convertToEmployerProfileDTO)
+        .collect(Collectors.toList());
+}
+
     
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {
         CompanyDetailDTO dto = new CompanyDetailDTO();
@@ -166,4 +178,29 @@ public User findEmployerByEmail(String email) {
         dto.setCreatedAt(company.getCreatedAt());
         return dto;
     }
+    private EmployerProfileDTO convertToEmployerProfileDTO(User user) {
+    EmployerProfileDTO dto = new EmployerProfileDTO();
+    
+    // Set user data
+    dto.setId(user.getId());
+    dto.setEmail(user.getEmail());
+    
+    // Set employer profile data if available
+    if (user.getEmployerProfile() != null) {
+        EmployerProfile profile = user.getEmployerProfile();
+        dto.setFirstName(profile.getFirstName());
+        dto.setLastName(profile.getLastName());
+        dto.setPhone(profile.getPhone());
+        dto.setJobTitle(profile.getJobTitle());
+        dto.setProfilePictureUrl(profile.getProfilePictureUrl());
+    }
+    
+    // Set company data if available
+    if (user.getCompany() != null) {
+        dto.setCompanyName(user.getCompany().getCompanyName());
+        dto.setCompanyId(user.getCompany().getId());
+    }
+    
+    return dto;
+}
 }

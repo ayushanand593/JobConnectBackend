@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "companies")
 @Data
@@ -42,6 +44,7 @@ public class Company {
 
 //    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "company")
+    @JsonManagedReference
     private List<User> employerUsers = new ArrayList<>();
 
 

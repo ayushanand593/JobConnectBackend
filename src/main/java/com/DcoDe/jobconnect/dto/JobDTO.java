@@ -3,6 +3,7 @@ package com.DcoDe.jobconnect.dto;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class JobDTO {
     private String salaryRange;
     private List<SkillDTO> skills;
     private JobStatus status;
+    private LocalDate applicationDeadline;
     private List<DisclosureQuestionDTO> disclosureQuestions;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

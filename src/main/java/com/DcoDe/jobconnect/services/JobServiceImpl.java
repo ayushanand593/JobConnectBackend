@@ -84,6 +84,7 @@ public class JobServiceImpl implements JobServiceI {
         job.setStatus(JobStatus.OPEN);
         job.setCompany(currentUser.getCompany());
         job.setPostedBy(currentUser);
+         job.setApplicationDeadline(jobDto.getApplicationDeadline());
 
         // Generate a unique job ID
           job.setJobId(generateJobId(currentUser.getCompany().getCompanyName(), jobDto.getTitle()));
@@ -184,6 +185,10 @@ public class JobServiceImpl implements JobServiceI {
         // Check if already applied
         if (jobApplicationRepository.existsByJobIdAndCandidateId(job.getId(), candidate.getId())) {
             throw new RuntimeException("You have already applied to this job");
+        }
+        // If the job status is closed, throw an exception
+        if (job.getStatus() == JobStatus.CLOSED) {
+            throw new RuntimeException("This job is closed for applications");
         }
 
         JobApplication application = new JobApplication();
@@ -369,6 +374,7 @@ public Job getJobEntityByJobId(String jobId) {
         dto.setRequirements(job.getRequirements());
         dto.setResponsibilities(job.getResponsibilities());
         dto.setSalaryRange(job.getSalaryRange());
+        dto.setApplicationDeadline(job.getApplicationDeadline());
         dto.setStatus(job.getStatus());
         dto.setCreatedAt(job.getCreatedAt());
         dto.setUpdatedAt(job.getUpdatedAt());
@@ -412,6 +418,7 @@ public Job getJobEntityByJobId(String jobId) {
         job.setRequirements(jobDto.getRequirements());
         job.setResponsibilities(jobDto.getResponsibilities());
         job.setSalaryRange(jobDto.getSalaryRange());
+        job.setApplicationDeadline(jobDto.getApplicationDeadline());
 
         // Update skills
         if (jobDto.getSkills() != null) {

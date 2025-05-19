@@ -3,6 +3,7 @@ package com.DcoDe.jobconnect.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -25,6 +26,7 @@ public class JobCreateDTO {
     private String responsibilities;
     private String salaryRange;
     private List<String> skills;
+    private LocalDate applicationDeadline;
 
     private List<DisclosureQuestionDTO> disclosureQuestions;
 }

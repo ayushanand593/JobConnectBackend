@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -48,10 +49,13 @@ public class Job {
     @Column(name = "experience_required")
     private String experienceLevel;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     private String description;
 
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String responsibilities;
+
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String requirements;
 
     @Column(name = "salary_range")
@@ -59,6 +63,9 @@ public class Job {
 
     @Enumerated(EnumType.STRING)
     private JobStatus status = JobStatus.OPEN;
+
+    @Column(name = "application_deadline")
+    private LocalDate applicationDeadline;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

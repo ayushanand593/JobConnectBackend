@@ -330,6 +330,12 @@ public JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestion
     return mapToJobDTO(job);
 }
 
+@Override
+public Job getJobEntityByJobId(String jobId) {
+    return jobRepository.findByJobId(jobId)
+        .orElseThrow(() -> new ResourceNotFoundException("Job not found with ID: " + jobId));
+}
+
      private void addDisclosureQuestionsToJob(Job job, List<DisclosureQuestionDTO> disclosureQuestionDTOs) {
         if (disclosureQuestionDTOs != null && !disclosureQuestionDTOs.isEmpty()) {
             // Clear existing questions

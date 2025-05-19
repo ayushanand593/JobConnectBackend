@@ -61,7 +61,7 @@ public class CandidateController {
         
         try {
             // Register the candidate
-            CandidateProfileDTO result = candidateService.registerCandidate(dto);
+            candidateService.registerCandidate(dto);
             
             // Auto-login by generating JWT token
             User user = candidateService.findUserByEmail(dto.getEmail());
@@ -79,12 +79,28 @@ public class CandidateController {
     @Operation(summary = "Get the current candidate's profile")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> getCurrentProfile() {
+           User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
         return ResponseEntity.ok(candidateService.getCurrentCandidateProfile());
     }
 
      @GetMapping("/{id}")
      @Operation(summary = "Get candidate profile by ID")
+     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE') or hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN') or hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     public ResponseEntity<CandidateProfileDTO> getCandidateById(@PathVariable Long id) {
+         User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // If candidate is viewing, ensure they can only view their own profile
+        if (currentUser.getRole().name().equals("CANDIDATE")) {
+            if (!currentUser.getId().equals(id)) {
+                throw new AccessDeniedException("You can only view your own profile");
+            }
+        }
         return ResponseEntity.ok(candidateService.getCandidateById(id));
     }
 
@@ -101,57 +117,107 @@ public class CandidateController {
         return ResponseEntity.ok(candidateService.updateCandidateProfile(profileDTO));
     }
 
-     @DeleteMapping("/delete/{id}")
-     @Operation(summary = "Delete candidate profile by ID")
+      @DeleteMapping("/delete/{id}")
+    @Operation(summary = "Delete candidate profile by ID")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<String> deleteCandidate(@PathVariable Long id) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // If candidate is deleting, ensure they can only delete their own profile
+        if (currentUser.getRole().name().equals("CANDIDATE")) {
+            if (!currentUser.getId().equals(id)) {
+                throw new AccessDeniedException("You can only delete your own profile");
+            }
+        }
+        
         candidateService.deleteCandidateById(id);
         return ResponseEntity.ok("Candidate deleted successfully.");
     }
 
      @PostMapping("/resume")
-     @Operation(summary = "Upload resume for the current candidate")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Upload resume for the current candidate")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<CandidateProfileDTO> uploadResume(
             @RequestParam("file") MultipartFile file) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
         return ResponseEntity.ok(candidateService.uploadResume(file));
     }
-     @GetMapping("/dashboard")
-     @Operation(summary = "Get candidate dashboard statistics")
+
+
+   @GetMapping("/dashboard")
+    @Operation(summary = "Get candidate dashboard statistics")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
-    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+    public ResponseEntity<CandidateDashboardStatsDTO> getCandidateDashboardStats(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-    // Default to last 30 days if not specified
-    if (startDate == null) {
-        startDate = LocalDate.now().minusDays(30);
-    }
-    if (endDate == null) {
-        endDate = LocalDate.now();
-    }
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
 
-    return ResponseEntity.ok(dashboardService.getCandidateDashboardStats(startDate, endDate));
-}
+        // Default to last 30 days if not specified
+        if (startDate == null) {
+            startDate = LocalDate.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        return ResponseEntity.ok(dashboardService.getCandidateDashboardStats(startDate, endDate));
+    }
 
 @GetMapping("/view/applications")
-@Operation(summary = "Get all job applications for the current candidate")
-@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
-    return ResponseEntity.ok(dashboardService.getCandidateApplications());
-}
+    @Operation(summary = "Get all job applications for the current candidate")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+    public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        return ResponseEntity.ok(dashboardService.getCandidateApplications());
+    }
+
+    
 @GetMapping("/view/applications/{applicationId}")
 @Operation(summary = "Get job application details for the current candidate")
 @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
 public ResponseEntity<JobApplicationDetailDTO> getCandidateApplicationDetail(@PathVariable Long applicationId) {
-    return ResponseEntity.ok(dashboardService.getCandidateApplicationDetail(applicationId));
+
+     User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // Call a service method that first verifies this application belongs to the current user
+        JobApplicationDetailDTO applicationDetail = dashboardService.getCandidateApplicationDetail(applicationId);
+
+        if (applicationDetail == null) {
+            throw new AccessDeniedException("You do not have access to this application");
+        }
+
+
+    return ResponseEntity.ok(applicationDetail);
 }
 
-@DeleteMapping("/withdraw/applications/{applicationId}")
-@Operation(summary = "Withdraw a job application for the current candidate")
-@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-public ResponseEntity<String> withdrawApplication(@PathVariable Long applicationId) {
-   jobApplicationService.withdrawApplication(applicationId);
-     return ResponseEntity.ok("Job Application deleted successfully.");
+ @DeleteMapping("/withdraw/applications/{applicationId}")
+    @Operation(summary = "Withdraw a job application for the current candidate")
+    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+    public ResponseEntity<String> withdrawApplication(@PathVariable Long applicationId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // Service should verify the application belongs to current user before withdrawal
+        jobApplicationService.withdrawApplication(applicationId);
+        return ResponseEntity.ok("Job Application withdrawn successfully.");
+    }
 }
-}
+

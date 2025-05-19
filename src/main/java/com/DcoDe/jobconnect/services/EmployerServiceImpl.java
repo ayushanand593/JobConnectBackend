@@ -38,6 +38,20 @@ public class EmployerServiceImpl implements EmployeeServiceI {
     private final JobRepository jobRepository;
     // private final CompanyRepository companyRepository;
 
+    @Override
+    public EmployerProfileDTO getEmployerById(Long employerId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || !currentUser.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Not authorized to access employer profile");
+        }
+
+        EmployerProfile profile = employerProfileRepository.findByUserId(employerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+
+        
+        return mapToEmployerProfileDTO(profile);
+    }
+
 
      @Override
     public EmployerProfileDTO getCurrentEmployerProfile() {
@@ -81,7 +95,7 @@ public class EmployerServiceImpl implements EmployeeServiceI {
 public void deleteEmployerById(Long employerId) {
     // 1) Get the logged-in admin
         User currentAdmin = SecurityUtils.getCurrentUser();
-        if (currentAdmin == null || !currentAdmin.getRole().equals(UserRole.ADMIN)) {
+        if (currentAdmin == null || !currentAdmin.getRole().equals(UserRole.ADMIN) || !currentAdmin.getRole().equals(UserRole.EMPLOYER)) {
             throw new AccessDeniedException("Not authorized");
         }
 

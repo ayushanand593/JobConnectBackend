@@ -28,6 +28,7 @@ import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.dto.JwtResponseDTO;
+import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
@@ -70,23 +71,23 @@ public class EmployerController {
      private final AuthServiceI authService;
         
    @PostMapping("/register")
-@Operation(summary = "Register a new employer")
-public ResponseEntity<JwtResponseDTO> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
-    companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
-            .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Company not found with ID: " + dto.getCompanyUniqueId()
-            ));
-    
-    // Register employer
-    Object result = companyService.addEmployerToCompany(dto);
-    
-    // Auto-login the employer
-    User user = companyService.findEmployerByEmail(dto.getEmail());
-    JwtResponseDTO authResponse = authService.generateTokenForUser(user);
-    
-    return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
-}
+    @Operation(summary = "Register a new employer")
+    public ResponseEntity<JwtResponseDTO> joinCompany(@Valid @RequestBody EmployeeRegistrationDTO dto) {
+        companyService.findByCompanyUniqueId(dto.getCompanyUniqueId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Company not found with ID: " + dto.getCompanyUniqueId()
+                ));
+        
+        // Register employer
+        companyService.addEmployerToCompany(dto);
+        
+        // Auto-login the employer
+        User user = companyService.findEmployerByEmail(dto.getEmail());
+        JwtResponseDTO authResponse = authService.generateTokenForUser(user);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+    }
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
@@ -108,35 +109,72 @@ public ResponseEntity<JwtResponseDTO> joinCompany(@Valid @RequestBody EmployeeRe
         return ResponseEntity.ok(profile);
     }
 
-     @PutMapping("/profile-update")
+    @GetMapping("/{employerId}")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER') or hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    @Operation(summary = "Get employer profile by ID")
+    public ResponseEntity<EmployerProfileDTO> getEmployerById(@PathVariable Long employerId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // If employer is viewing, ensure they can only view their own profile
+        // unless they're an admin
+        if (currentUser.getRole().equals(UserRole.EMPLOYER) && !currentUser.getId().equals(employerId)) {
+            throw new AccessDeniedException("You can only view your own profile");
+        }
+        
+        return ResponseEntity.ok(employerService.getEmployerById(employerId));
+    }
+
+      @PutMapping("/profile-update")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Update the current employer's profile")
     public ResponseEntity<EmployerProfileDTO> updateProfile(
             @Valid @RequestBody EmployerProfileUpdateDTO dto) {
-        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Not authenticated");
         }
 
+        // Ensure employer can only update their own profile
+        // if (dto. != null && !dto.getId().equals(currentUser.getId())) {
+        //     throw new AccessDeniedException("You can only update your own profile");
+        // }
+
         EmployerProfileDTO updatedProfile = employerService.updateProfile(dto);
-       return ResponseEntity.ok(updatedProfile);
+        return ResponseEntity.ok(updatedProfile);
     }
 
-    @DeleteMapping("/delete/{employerId}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+     @DeleteMapping("/delete/{employerId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN') or hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Delete employer profile by ID")
     public ResponseEntity<String> deleteEmployer(@PathVariable Long employerId) {
-    employerService.deleteEmployerById(employerId);
-    return ResponseEntity.ok("Employer deleted successfully.");
-}
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // If employer is deleting (not admin), ensure they can only delete their own profile
+        if (currentUser.getRole().equals(UserRole.EMPLOYER) && !currentUser.getId().equals(employerId)) {
+            throw new AccessDeniedException("You can only delete your own profile");
+        }
+        
+        employerService.deleteEmployerById(employerId);
+        return ResponseEntity.ok("Employer deleted successfully.");
+    }
 
-@GetMapping("/dashboard")
+  @GetMapping("/dashboard")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Get employer dashboard statistics")
     public ResponseEntity<EmployerDashboardStatsDTO> getEmployerDashboardStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
 
         // Default to last 30 days if not specified
         if (startDate == null) {
@@ -149,68 +187,74 @@ public ResponseEntity<JwtResponseDTO> joinCompany(@Valid @RequestBody EmployeeRe
         return ResponseEntity.ok(dashboardService.getEmployerDashboardStats(startDate, endDate));
     }
 
-   @GetMapping("/my-jobs")
+     @GetMapping("/my-jobs")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Get all jobs posted by the current employer")
-public ResponseEntity<List<JobDTO>> getMyJobs() {
-    User currentUser = SecurityUtils.getCurrentUser();
-    if (currentUser == null) {
-        throw new AccessDeniedException("Not authenticated");
+    public ResponseEntity<List<JobDTO>> getMyJobs() {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        List<JobDTO> jobs = employerService.getJobsByEmployerId(currentUser.getId());
+        return ResponseEntity.ok(jobs);
+    }
+  @GetMapping("/applications/{jobId}")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Get all job applications for a specific job")
+    public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariable String jobId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // Verify that the job belongs to the current employer
+        Job job = jobService.getJobEntityByJobId(jobId);
+        if (job == null || !job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can only view applications for your own jobs");
+        }
+        
+        List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
+        return ResponseEntity.ok(applications);
     }
 
-    List<JobDTO> jobs = employerService.getJobsByEmployerId(currentUser.getId());
-    return ResponseEntity.ok(jobs);
-}
- @GetMapping("/applications/{jobId}")
-@PreAuthorize("hasRole('EMPLOYER')")
-@Operation(summary = "Get all job applications for a specific job")
-public ResponseEntity<List<JobApplicationDTO>> getApplicationsForJob(@PathVariable String jobId) {
-    List<JobApplicationDTO> applications = applicationService.getApplicationsForJob(jobId);
-    return ResponseEntity.ok(applications);
-}
-
- @PatchMapping("/jobId/{jobId}/status")
-    @PreAuthorize("hasRole('EMPLOYER')")
+  @PatchMapping("/jobId/{jobId}/status")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Change the status of a job by job ID")
     public ResponseEntity<Void> changeJobStatusByJobId(
             @PathVariable String jobId,
             @RequestParam JobStatus status) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // Verify that the job belongs to the current employer
+        Job job = jobService.getJobEntityByJobId(jobId);
+        if (job == null || !job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can only change the status of your own jobs");
+        }
+        
         jobService.changeJobStatusByJobId(jobId, status);
         return ResponseEntity.ok().build();
     }
-
-//     @PatchMapping("/application/{id}/status")
-// public ResponseEntity<Void> updateApplicationStatus(
-//         @PathVariable Long id,
-//         @RequestBody Map<String, String> payload) {
-    
-//     // Parse the status from the request body
-//     String statusStr = payload.get("status");
-//     if (statusStr == null) {
-//         throw new IllegalArgumentException("Status is required");
-//     }
-    
-//     ApplicationStatus status;
-//     try {
-//         status = ApplicationStatus.valueOf(statusStr);
-//     } catch (IllegalArgumentException e) {
-//         throw new IllegalArgumentException("Invalid status value: " + statusStr);
-//     }
-    
-//     applicationService.updateApplicationStatus(id, status);
-//     return ResponseEntity.ok().build();
-// }
 @PatchMapping("/application/{id}/status")
-@PreAuthorize("hasRole('EMPLOYER')")
-@Operation(summary = "Update the status of a job application")
-public ResponseEntity<Void> updateApplicationStatus(
-        @PathVariable Long id,
-        @RequestParam ApplicationStatus status) {
-    
-    applicationService.updateApplicationStatus(id, status);
-    return ResponseEntity.ok().build();
-}
-
-
-
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    @Operation(summary = "Update the status of a job application")
+    public ResponseEntity<Void> updateApplicationStatus(
+            @PathVariable Long id,
+            @RequestParam ApplicationStatus status) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+        
+        // This will need a service method to verify if the application belongs to a job owned by this employer
+        if (!applicationService.isApplicationForEmployerJob(id, currentUser.getId())) {
+            throw new AccessDeniedException("You can only update applications for your own jobs");
+        }
+        
+        applicationService.updateApplicationStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
 }

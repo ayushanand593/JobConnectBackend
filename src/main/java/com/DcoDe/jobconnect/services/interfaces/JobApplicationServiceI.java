@@ -25,4 +25,6 @@ public interface JobApplicationServiceI {
         void withdrawApplication(Long id);
 
         void updateApplicationStatus(Long id, ApplicationStatus status);
+
+        public boolean isApplicationForEmployerJob(Long applicationId, Long employerId);
 }

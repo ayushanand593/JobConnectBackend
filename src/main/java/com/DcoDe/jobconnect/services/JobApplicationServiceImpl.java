@@ -230,6 +230,15 @@ public void updateApplicationStatus(Long id, ApplicationStatus status) {
     application.setStatus(status);
     applicationRepository.save(application);
 }
+
+@Override
+public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) {
+    JobApplication application = jobApplicationRepository.findById(applicationId)
+        .orElseThrow(() -> new ResourceNotFoundException("Job application not found with ID: " + applicationId));
+    
+    // Check if the job associated with this application belongs to the employer
+    return application.getJob().getPostedBy().getId().equals(employerId);
+}
     
     private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
         JobApplicationDTO dto = new JobApplicationDTO();

@@ -12,7 +12,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.DcoDe.jobconnect.dto.EmailUpdateDTO;
 import com.DcoDe.jobconnect.dto.JwtResponseDTO;
+import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
 import com.DcoDe.jobconnect.dto.UserDTO;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.repositories.UserRepository;
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthServiceI {
        private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User login(String email, String password) {
@@ -73,6 +76,40 @@ public class AuthServiceImpl implements AuthServiceI {
             .token(token)
             .user(userDTO)
             .build();
+    }
+     @Override
+    public void updateEmail(EmailUpdateDTO emailUpdateDTO) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new SecurityException("Not authenticated");
+        }
+
+        // Verify current password
+        if (!passwordEncoder.matches(emailUpdateDTO.getCurrentPassword(), currentUser.getPassword())) {
+            throw new BadCredentialsException("Invalid current password");
+        }
+
+        // Update email
+        currentUser.setEmail(emailUpdateDTO.getNewEmail());
+        userRepository.save(currentUser);
+    }
+
+    @Override
+    public void updatePassword(PasswordUpdateDTO passwordUpdateDTO) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new SecurityException("Not authenticated");
+        }
+
+        // Verify current password
+        if (!passwordEncoder.matches(passwordUpdateDTO.getCurrentPassword(), currentUser.getPassword())) {
+            throw new BadCredentialsException("Invalid current password");
+        }
+
+        // Update password
+        String encodedNewPassword = passwordEncoder.encode(passwordUpdateDTO.getNewPassword());
+        currentUser.setPassword(encodedNewPassword);
+        userRepository.save(currentUser);
     }
     
     private UserDTO mapToDto(User user) {

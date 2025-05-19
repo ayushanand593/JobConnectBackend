@@ -7,6 +7,9 @@ import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 
 public interface EmployeeServiceI {
+
+    EmployerProfileDTO getEmployerById(Long employerId);
+
     EmployerProfileDTO getCurrentEmployerProfile();
 
     EmployerProfileDTO updateProfile(EmployerProfileUpdateDTO dto);
@@ -14,5 +17,7 @@ public interface EmployeeServiceI {
     void deleteEmployerById(Long employerId);
 
     List<JobDTO> getJobsByEmployerId(Long employerId);
+
+    
 
 }

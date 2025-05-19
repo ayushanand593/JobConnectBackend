@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +26,14 @@ import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
 import com.DcoDe.jobconnect.dto.JobSearchRequestDTO;
 import com.DcoDe.jobconnect.dto.JobSearchResponseDTO;
+import com.DcoDe.jobconnect.entities.Job;
+import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.JobType;
+import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
+import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.services.interfaces.JobSearchServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
+import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +49,8 @@ public class JobController  {
     private final JobServiceI jobService;
 
     private final JobSearchServiceI jobSearchService;
+
+    private final JobRepository jobRepository;  
     // @Autowired
     // private final ApplicationService applicationService;
 
@@ -69,6 +77,19 @@ public class JobController  {
     public ResponseEntity<JobDTO> updateJobByJobId(
             @PathVariable String jobId,
             @Valid @RequestBody JobCreateDTO jobDto) {
+  User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized to update jobs");
+        }
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if user has permission to update this job
+        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Not authorized to update this job");
+        }
+            
         return ResponseEntity.ok(jobService.updateJobByJobId(jobId, jobDto));
     }
 
@@ -76,6 +97,20 @@ public class JobController  {
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
     @Operation(summary = "Delete job by job ID")
     public ResponseEntity<String> deleteJobByJobId(@PathVariable String jobId) {
+
+          User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized to update jobs");
+        }
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if user has permission to update this job
+        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Not authorized to update this job");
+        }
+
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");
     }
@@ -88,6 +123,11 @@ public class JobController  {
             @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
             @RequestPart(value = "coverLetterFile", required = false) MultipartFile coverLetterFile) {
         JobApplicationDTO applicationDTO = jobService.applyToJob(jobId, applicationCreateDTO, resumeFile, coverLetterFile);
+          User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Must be logged in to apply for a job");
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationDTO);
     }
 
@@ -135,6 +175,18 @@ public class JobController  {
     @GetMapping("/{jobId}/disclosure-questions")
     @Operation(summary = "Get disclosure questions for a job")
     public ResponseEntity<JobDisclosureQuestionsDTO> getJobDisclosureQuestions(@PathVariable String jobId) {
+          User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized to view disclosure questions");
+        }
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if user has permission to see disclosures for this job
+        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Not authorized to view disclosure questions for this job");
+        }
         JobDisclosureQuestionsDTO questions = jobService.getJobDisclosureQuestions(jobId);
         return ResponseEntity.ok(questions);
     }
@@ -148,6 +200,18 @@ public class JobController  {
     public ResponseEntity<JobDTO> updateJobDisclosureQuestions(
             @PathVariable String jobId, 
             @RequestBody List<DisclosureQuestionDTO> questions) {
+          User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized to update jobs");
+        }
+
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+
+        // Check if user has permission to update this job
+        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Not authorized to update this job");
+        }
         JobDTO updatedJob = jobService.updateJobDisclosureQuestions(jobId, questions);
         return ResponseEntity.ok(updatedJob);
     }

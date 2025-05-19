@@ -10,6 +10,7 @@ import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
 import com.DcoDe.jobconnect.dto.JobCreateDTO;
 import com.DcoDe.jobconnect.dto.JobDTO;
 import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
+import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.enums.JobStatus;
 
 public interface JobServiceI {
@@ -29,4 +30,6 @@ public interface JobServiceI {
     JobDisclosureQuestionsDTO getJobDisclosureQuestions(String jobId);
 
     JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestionDTO> questions);
+
+    public Job getJobEntityByJobId(String jobId);
 }

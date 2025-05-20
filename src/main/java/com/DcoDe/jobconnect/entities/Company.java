@@ -1,7 +1,9 @@
 package com.DcoDe.jobconnect.entities;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -43,14 +46,19 @@ public class Company {
 
 
 //    @EqualsAndHashCode.Exclude
-    @OneToMany(mappedBy = "company")
-    @JsonManagedReference
+      @OneToMany(mappedBy = "company")
+    @JsonIgnore  // Add this to prevent recursion
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<User> employerUsers = new ArrayList<>();
 
 
 //    @EqualsAndHashCode.Exclude
 @OneToMany(mappedBy = "company")
-    private List<Job> jobs = new ArrayList<>();
+    @JsonIgnore  // Add this to prevent recursion
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Job> jobs= new ArrayList<>();
 
     @ManyToMany
     @JoinTable(

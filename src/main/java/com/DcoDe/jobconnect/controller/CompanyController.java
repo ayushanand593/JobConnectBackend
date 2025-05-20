@@ -60,7 +60,7 @@ public class CompanyController {
   @PostMapping("/register")
 @Operation(summary = "Register a new company")
 public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
-    CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
+     companyService.registerCompany(dto);
     
     // Auto-login the company admin
     User user = companyService.findCompanyAdminByEmail(dto.getEmail());

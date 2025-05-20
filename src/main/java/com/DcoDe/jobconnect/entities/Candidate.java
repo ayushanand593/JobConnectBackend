@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "candidates")
@@ -56,6 +57,12 @@ public class Candidate {
 
     // @OneToMany(mappedBy = "candidate")
     // private List<JobApplication> applications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+@JsonManagedReference("candidate-savedjobs")  // Add this
+@ToString.Exclude
+@EqualsAndHashCode.Exclude
+private Set<SavedJob> savedJobs = new HashSet<>();
 
     @Override
     public int hashCode() {

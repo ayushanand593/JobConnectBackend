@@ -4,11 +4,15 @@ import java.time.LocalDateTime;
 
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class JobApplicationDetailDTO {
     private Long id;
     private String jobId;

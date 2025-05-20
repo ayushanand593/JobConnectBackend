@@ -3,6 +3,10 @@ package com.DcoDe.jobconnect.entities;
 
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.JobType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,14 +29,15 @@ public class Job {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
-
+    @JsonBackReference("company-jobs")  // Add this
     private Company company;
 
     @ManyToOne
     @JoinColumn(name = "posted_by", nullable = false)
-    private User postedBy;  // The employer user who posted this job
+    @JsonBackReference("user-jobs")  // Add this
+    private User postedBy;
 
     @Column(nullable = false)
     private String title;
@@ -73,23 +78,32 @@ public class Job {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToMany
+      @ManyToMany
     @JoinTable(
             name = "job_skills",
             joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-     @ToString.Exclude  // Add this annotation to prevent issues with toString()
-    @EqualsAndHashCode.Exclude  // Add this to prevent issues with equals/hashCode
+    @JsonIgnore  // Change to @JsonIgnore instead of @ToString.Exclude
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Skill> skills = new HashSet<>();
 
-    @OneToMany(mappedBy = "job")
-      @ToString.Exclude  // Add this to prevent issues with toString()
-    @EqualsAndHashCode.Exclude  // Add this to prevent issues with equals/hashCode
+ @OneToMany(mappedBy = "job")
+    @JsonIgnore  // Change to @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<JobApplication> applications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+        @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Add this to prevent recursion
     private List<DisclosureQuestion> disclosureQuestions = new ArrayList<>();
+
+   @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("job-savedjobs")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<SavedJob> savedJobs = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

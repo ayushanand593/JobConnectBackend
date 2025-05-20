@@ -10,6 +10,8 @@ import lombok.ToString;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "skills")
 @Data
@@ -22,11 +24,15 @@ public class Skill {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "skills")
-      @ToString.Exclude  // Prevent circular toString() calls
-    @EqualsAndHashCode.Exclude  // Prevent circular equals/hashCode calls
+     @ManyToMany(mappedBy = "skills")
+    @JsonIgnore  // Add this
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Job> jobs = new HashSet<>();
 
-    @ManyToMany(mappedBy = "skills")
+      @ManyToMany(mappedBy = "skills")
+    @JsonIgnore  // Add this
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Candidate> candidates = new HashSet<>();
 }

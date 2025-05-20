@@ -27,4 +27,6 @@ public interface JobApplicationServiceI {
         void updateApplicationStatus(Long id, ApplicationStatus status);
 
         public boolean isApplicationForEmployerJob(Long applicationId, Long employerId);
+
+        boolean isApplicationForJobPostedByEmployer(Long applicationId, Long employerId); // Add this line
 }

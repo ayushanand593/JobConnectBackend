@@ -120,9 +120,11 @@ private SavedJobDTO convertToDTO(SavedJob savedJob) {
      * Check if a job is saved
      */
     @GetMapping("/{jobId}/is-saved")
-    @PreAuthorize("hasAuthority('CANDIDATE') || hasAuthority('ROLE_CANDIDATE')")
-    public ResponseEntity<?> isJobSaved(@PathVariable String jobId,
-                                       @RequestAttribute("candidateId") Long candidateId) {
+    @PreAuthorize("hasAuthority('CANDIDATE') or hasAuthority('ROLE_CANDIDATE')")
+    public ResponseEntity<?> isJobSaved(@PathVariable String jobId) {
+
+          User user = SecurityUtils.getCurrentUser();
+    Long candidateId = user.getCandidateProfile().getId();
         try {
             boolean isSaved = savedJobService.isJobSavedByCandidate(candidateId, jobId);
             return ResponseEntity.ok(isSaved);

@@ -69,13 +69,12 @@ public class JobApplicationController {
                              application.getCandidateId().equals(currentUser.getId());
         
         // Check if current user is the employer who owns the job
-        boolean isEmployer = currentUser.getRole().name().equals("EMPLOYER") && 
-                            jobApplicationService.isApplicationForEmployerJob(id, currentUser.getId());
+        // boolean isEmployer = jobApplicationService.isApplicationForJobPostedByEmployer(id, currentUser.getId());
         
-        // Allow access if user is admin, the candidate who applied, or the employer who owns the job
-        if (!isCandidate && !isEmployer && !currentUser.getRole().name().equals("ADMIN")) {
-            throw new AccessDeniedException("You don't have permission to view this application");
-        }
+        // // Allow access if user is admin, the candidate who applied, or the employer who owns the job
+        // if (!isEmployer) {
+        //     throw new AccessDeniedException("You don't have permission to view this application");
+        // }
         
         return ResponseEntity.ok(application);
     }

@@ -19,6 +19,8 @@ import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
+
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -137,16 +139,21 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
 
         // Security check: only the candidate who applied or employer who posted the job can view
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId()).orElse(null);
-        
+
         if (candidate != null && application.getCandidate().getId().equals(candidate.getId())) {
             // It's the candidate who applied - allow access
-        } else {
-            // For now, simple check that ensures only the candidate who applied can access
-            // In a real implementation, you'd check if it's the employer who posted the job
-            throw new AccessDeniedException("You don't have permission to view this application");
+            return mapToJobApplicationDTO(application);
         }
 
-        return mapToJobApplicationDTO(application);
+        // Check if the current user is the employer who posted the job
+        Job job = application.getJob();
+        if (currentUser.getRole().name().equals("EMPLOYER") && job.getPostedBy().getId().equals(currentUser.getId())) {
+            // It's the employer who posted the job - allow access
+            return mapToJobApplicationDTO(application);
+        }
+
+        // If none of the above conditions are met, deny access
+        throw new AccessDeniedException("You don't have permission to view this application");
     }
 
     
@@ -234,11 +241,21 @@ public void updateApplicationStatus(Long id, ApplicationStatus status) {
 @Override
 public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) {
     JobApplication application = jobApplicationRepository.findById(applicationId)
-        .orElseThrow(() -> new ResourceNotFoundException("Job application not found with ID: " + applicationId));
+        .orElseThrow(() -> new ResourceNotFoundException("Application not found with ID: " + applicationId));
     
     // Check if the job associated with this application belongs to the employer
     return application.getJob().getPostedBy().getId().equals(employerId);
 }
+
+
+    @Override
+    public boolean isApplicationForJobPostedByEmployer(Long applicationId, Long employerId) {
+        JobApplication application = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+        Job job = application.getJob();
+        System.out.println(job.getPostedBy().getId() + " " + employerId);
+        return job.getPostedBy().getId().equals(employerId);
+    }
     
     private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
         JobApplicationDTO dto = new JobApplicationDTO();

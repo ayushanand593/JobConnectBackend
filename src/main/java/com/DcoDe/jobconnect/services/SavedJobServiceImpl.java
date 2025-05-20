@@ -84,9 +84,5 @@ public class SavedJobServiceImpl implements SavedJobServiceI {
         return savedJobRepository.existsByCandidateAndJob(candidate, job);
     }
 
-    @Override
-    public List<Candidate> getCandidatesWhoSavedJob(String jobId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCandidatesWhoSavedJob'");
-    }
+ 
 }

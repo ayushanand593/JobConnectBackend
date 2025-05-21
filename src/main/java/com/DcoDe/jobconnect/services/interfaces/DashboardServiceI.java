@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
+import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
 
@@ -15,6 +16,8 @@ public interface DashboardServiceI {
      JobApplicationDetailDTO getCandidateApplicationDetail(Long applicationId);
 
       EmployerDashboardStatsDTO getEmployerDashboardStats(LocalDate startDate, LocalDate endDate);
+
+      CompanyDashboardStatsDTO getCompanyDashboardStats(LocalDate startDate, LocalDate endDate);
 
      
 }

@@ -2,6 +2,7 @@ package com.DcoDe.jobconnect.repositories;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,6 +22,12 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     @Query("SELECT a FROM JobApplication  a WHERE a.job.jobId = :jobId")
     List<JobApplication> findByJobId(@Param("jobId") String jobId);
+
+     // Find job applications for a list of jobs and within a date range
+    List<JobApplication> findByJobInAndCreatedAtBetween(List<Job> jobs, LocalDateTime start, LocalDateTime end);
+    
+    // Count job applications for a list of jobs and after a certain date
+    long countByJobInAndCreatedAtAfter(List<Job> jobs, LocalDateTime date);
 
     List<JobApplication> findAllByJobIdIn(Collection<Long> jobIds);
 

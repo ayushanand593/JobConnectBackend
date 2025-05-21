@@ -12,12 +12,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
+import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
+import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO.EmployerDTO;
+import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO.JobListItemDTO;
 import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
+import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.FileDocument;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
@@ -25,12 +30,14 @@ import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
+import com.DcoDe.jobconnect.repositories.CompanyRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
+import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
-
+import org.springframework.transaction.annotation.Transactional;
 import com.DcoDe.jobconnect.exceptions.FileNotFoundException;
 
 import lombok.RequiredArgsConstructor;
@@ -39,9 +46,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardServiceI {
 
+    @Autowired
     private final JobApplicationRepository applicationRepository;
+
+    @Autowired
     private final JobRepository jobRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+    // private CompanyRepository companyRepository;
     private final FileStorageServiceI fileStorageService;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final int MAX_ITEMS_IN_LIST = 5;
+    
 
      @Override
     public CandidateDashboardStatsDTO getCandidateDashboardStats(LocalDate startDate, LocalDate endDate) {
@@ -172,6 +190,157 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
     return stats;
 }
+    @Override
+    @Transactional(readOnly = true)
+    public CompanyDashboardStatsDTO getCompanyDashboardStats(LocalDate startDate, LocalDate endDate) {
+        // Get current user and verify they belong to a company
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || currentUser.getCompany() == null) {
+            throw new AccessDeniedException("You must be associated with a company to access dashboard");
+        }
+
+        Company company = currentUser.getCompany();
+
+        // Convert dates to LocalDateTime for queries
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        
+        // Get all company jobs
+        List<Job> allJobs = jobRepository.findByCompany(company);
+        
+        // Get job applications for the company in date range
+        List<JobApplication> allApplications = applicationRepository.findByJobInAndCreatedAtBetween(
+                allJobs, startDateTime, endDateTime);
+        
+        // Get company employers (users)
+        List<User> employers = userRepository.findByCompany(company);
+        
+        // Get applications in the last month
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+        long applicationsLastMonth = applicationRepository.countByJobInAndCreatedAtAfter(
+                allJobs, oneMonthAgo);
+        
+        // Get jobs posted in the last month
+        long jobsLastMonth = jobRepository.countByCompanyAndCreatedAtAfter(company, oneMonthAgo);
+        
+        // Calculate average applications per job
+        double avgApplicationsPerJob = allJobs.isEmpty() ? 0 : 
+                (double) allApplications.size() / allJobs.size();
+        
+        // Count open vs closed jobs
+        long openJobs = allJobs.stream()
+                .filter(job -> job.getStatus() == JobStatus.OPEN)
+                .count();
+        
+        long closedJobs = allJobs.size() - openJobs;
+        
+        // Applications by date
+        Map<String, Long> applicationsByDate = allApplications.stream()
+                .collect(Collectors.groupingBy(
+                        app -> app.getCreatedAt().toLocalDate().format(DATE_FORMATTER),
+                        Collectors.counting()
+                ));
+        
+        // Jobs by date
+        Map<String, Long> jobsByDate = allJobs.stream()
+                .filter(job -> job.getCreatedAt().isAfter(startDateTime) && 
+                               job.getCreatedAt().isBefore(endDateTime))
+                .collect(Collectors.groupingBy(
+                        job -> job.getCreatedAt().toLocalDate().format(DATE_FORMATTER),
+                        Collectors.counting()
+                ));
+        
+        // Top jobs by application count
+        Map<Job, Long> applicationCountsByJob = allApplications.stream()
+                .collect(Collectors.groupingBy(JobApplication::getJob, Collectors.counting()));
+        
+        List<CompanyDashboardStatsDTO.JobStatsDTO> topJobsByApplications = applicationCountsByJob.entrySet().stream()
+                .sorted(Map.Entry.<Job, Long>comparingByValue().reversed())
+                .limit(MAX_ITEMS_IN_LIST)
+                .map(entry -> CompanyDashboardStatsDTO.JobStatsDTO.builder()
+                        .id(entry.getKey().getId())
+                        .jobId(entry.getKey().getJobId())
+                        .title(entry.getKey().getTitle())
+                        .companyName(company.getCompanyName())
+                        .jobType(entry.getKey().getJobType().toString())
+                        .location(entry.getKey().getLocation())
+                        .status(entry.getKey().getStatus().toString())
+                        .applicationCount(entry.getValue())
+                        .postedDate(entry.getKey().getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Applications by job type
+        Map<String, Long> applicationsByJobType = allApplications.stream()
+                .collect(Collectors.groupingBy(
+                        app -> app.getJob().getJobType().toString(),
+                        Collectors.counting()
+                ));
+        
+        // Applications by location
+        Map<String, Long> applicationsByLocation = allApplications.stream()
+                .collect(Collectors.groupingBy(
+                        app -> app.getJob().getLocation(),
+                        Collectors.counting()
+                ));
+        
+        // Applications by status
+        Map<String, Long> applicationsByStatus = allApplications.stream()
+                .collect(Collectors.groupingBy(
+                        app -> app.getStatus().toString(),
+                        Collectors.counting()
+                ));
+        
+        // Recent employers
+        List<CompanyDashboardStatsDTO.EmployerDTO> recentEmployers = employers.stream()
+    .filter(user -> user.getEmployerProfile() != null) // 👈 Prevents NullPointerException
+    .sorted(Comparator.comparing(User::getCreatedAt).reversed())
+    .limit(MAX_ITEMS_IN_LIST)
+    .map(user -> CompanyDashboardStatsDTO.EmployerDTO.builder()
+        .id(user.getId())
+        .fullName(user.getEmployerProfile().getFirstName() + " " + user.getEmployerProfile().getLastName())
+        .email(user.getEmail())
+        .joinDate(user.getCreatedAt())
+        .position(user.getEmployerProfile().getJobTitle())
+        .build())
+    .collect(Collectors.toList());
+        
+        // Recent jobs
+        List<JobListItemDTO> recentJobs = allJobs.stream()
+                .sorted(Comparator.comparing(Job::getCreatedAt).reversed())
+                .limit(MAX_ITEMS_IN_LIST)
+                .map(job -> JobListItemDTO.builder()
+                        .id(job.getId())
+                        .jobId(job.getJobId())
+                        .title(job.getTitle())
+                        .jobType(job.getJobType().toString())
+                        .location(job.getLocation())
+                        .status(job.getStatus().toString())
+                        .postedDate(job.getCreatedAt())
+                        .applicationDeadline(job.getApplicationDeadline())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Build and return the dashboard DTO
+        return CompanyDashboardStatsDTO.builder()
+                .totalEmployers(employers.size())
+                .totalJobs(allJobs.size())
+                .totalApplications(allApplications.size())
+                .applicationsLastMonth(applicationsLastMonth)
+                .averageApplicationsPerJob(avgApplicationsPerJob)
+                .openJobs(openJobs)
+                .closedJobs(closedJobs)
+                .jobsPostsLastMonth(jobsLastMonth)
+                .applicationsByDate(applicationsByDate)
+                .jobsByDate(jobsByDate)
+                .topJobsByApplications(topJobsByApplications)
+                .applicationsByJobType(applicationsByJobType)
+                .applicationsByLocation(applicationsByLocation)
+                .applicationsByStatus(applicationsByStatus)
+                .recentEmployers(recentEmployers)
+                .recentJobs(recentJobs)
+                .build();
+    }
 
  private EmployerDashboardStatsDTO calculateEmployerStats(List<Job> jobs, List<JobApplication> allApplications,
                                              List<JobApplication> periodApplications) {

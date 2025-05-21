@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface CompanyRepository extends JpaRepository<Company,Long> {
     Optional<Company> findByCompanyUniqueId(String companyUniqueId);
     
+    
     Page<Company> findByCompanyNameContainingIgnoreCase(String keyword, Pageable pageable);
 
     @Query("SELECT DISTINCT c FROM Company c LEFT JOIN FETCH c.admins WHERE c.id = :companyId")

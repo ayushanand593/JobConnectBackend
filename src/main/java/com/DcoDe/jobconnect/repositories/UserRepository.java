@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.repositories;
 
+import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,5 +26,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
     @Query("SELECT u FROM User u JOIN FETCH u.employerProfile ep JOIN u.company c WHERE c.companyUniqueId = :companyUniqueId")
     List<User> findWithProfilesByCompanyCompanyUniqueId(@Param("companyUniqueId") String companyUniqueId);
    
+    List<User> findByCompany(Company company);
 
 }

@@ -1,7 +1,9 @@
 package com.DcoDe.jobconnect.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
 import com.DcoDe.jobconnect.dto.CompanyProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
@@ -29,6 +32,7 @@ import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
+import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 // import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
@@ -46,6 +50,8 @@ public class CompanyController {
      private final CompanyServiceI companyService;
     //  private final FileStorageServiceI fileStorageService;
      private final CompanyImageServiceI companyImageService;
+
+     private final DashboardServiceI dashboardService;
 
       private final AuthServiceI authService;
 
@@ -191,6 +197,22 @@ public ResponseEntity<List<EmployerProfileDTO>> getCompanyEmployees(
     List<EmployerProfileDTO> employees = companyService.getCompanyEmployees(companyUniqueId);
     return ResponseEntity.ok(employees);
 }
+ @GetMapping("dashboard")
+ @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    public ResponseEntity<CompanyDashboardStatsDTO> getCompanyDashboardStats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // Default to last 30 days if not specified
+        if (startDate == null) {
+            startDate = LocalDate.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        return ResponseEntity.ok(dashboardService.getCompanyDashboardStats(startDate, endDate));
+    }
     
     // @GetMapping("/images/{fileId}")
     // public ResponseEntity<byte[]> getImage(@PathVariable String fileId) {

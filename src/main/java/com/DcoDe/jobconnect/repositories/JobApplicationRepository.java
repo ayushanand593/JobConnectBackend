@@ -1,4 +1,5 @@
 package com.DcoDe.jobconnect.repositories;
+import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
 
 import java.util.Collection;
@@ -22,4 +23,6 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByJobId(@Param("jobId") String jobId);
 
     List<JobApplication> findAllByJobIdIn(Collection<Long> jobIds);
+
+     void deleteByJob(Job job);
 }

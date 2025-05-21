@@ -1,28 +1,38 @@
 package com.DcoDe.jobconnect.services;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
+import com.DcoDe.jobconnect.dto.CompanyProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
 import com.DcoDe.jobconnect.dto.EmployeeRegistrationDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.entities.Company;
 import com.DcoDe.jobconnect.entities.EmployerProfile;
+import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
+import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
 import com.DcoDe.jobconnect.repositories.CompanyRepository;
+import com.DcoDe.jobconnect.repositories.DisclosureQuestionRepository;
 import com.DcoDe.jobconnect.repositories.EmployerProfileRepository;
+import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
+import com.DcoDe.jobconnect.repositories.JobRepository;
+import com.DcoDe.jobconnect.repositories.SavedJobRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
+import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +43,10 @@ public class CompanyServiceImpl implements CompanyServiceI {
 
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final JobRepository jobRepository;
+    private final JobApplicationRepository jobApplicationRepository;
+    private final SavedJobRepository savedJobRepository;
+    private final DisclosureQuestionRepository disclosureQuestionRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmployerProfileRepository employerProfileRepository;
 
@@ -94,6 +108,84 @@ public class CompanyServiceImpl implements CompanyServiceI {
     public Optional<Company> findByCompanyUniqueId(String companyUniqueId) {
         return companyRepository.findByCompanyUniqueId(companyUniqueId);
     }
+     @Override
+    @Transactional
+    public CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || currentUser.getCompany() == null) {
+            throw new AccessDeniedException("User not associated with any company");
+        }
+
+        Company company = currentUser.getCompany();
+
+        // Check if user is admin
+        if (!isCompanyAdmin(currentUser)) {
+            throw new AccessDeniedException("Only company admins can update the profile");
+        }
+
+        // Update company details
+        company.setCompanyName(profileDTO.getCompanyName());
+        company.setDescription(profileDTO.getDescription());
+        company.setWebsite(profileDTO.getWebsite());
+        company.setIndustry(profileDTO.getIndustry());
+        company.setSize(profileDTO.getSize());
+
+        company = companyRepository.save(company);
+
+        return mapToCompanyDetailDTO(company);
+    }
+
+    
+@Override
+@Transactional
+public void deleteCompanyById(String companyUniqueId) {
+    // Check if user is admin
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null || !isCompanyAdmin(currentUser)) {
+        throw new AccessDeniedException("Only company admins can delete the company");
+    }
+
+    Company company = findByCompanyUniqueId(companyUniqueId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+    
+    // Check if the current user is an admin of this specific company
+    if (!company.getAdmins().contains(currentUser)) {
+        throw new AccessDeniedException("Not authorized to delete this company");
+    }
+    
+    // Manually handle relationships to avoid cascade issues
+    
+    // 1. Clear the admin relationships first
+    company.getAdmins().clear();
+    
+    // 2. Handle jobs - either delete them or update their company reference
+    for (Job job : new ArrayList<>(company.getJobs())) {
+        // Delete job applications first
+        jobApplicationRepository.deleteByJob(job);
+        
+        // Delete saved jobs
+        savedJobRepository.deleteByJob(job);
+        
+        // Handle disclosure questions
+        disclosureQuestionRepository.deleteByJob(job);
+        
+        // Finally delete the job
+        jobRepository.delete(job);
+    }
+    
+    // 3. Handle employer users - update their company reference or handle as needed
+    for (User user : new ArrayList<>(company.getEmployerUsers())) {
+        // Option 1: Set company to null if that's acceptable in your business logic
+        user.setCompany(null);
+        userRepository.save(user);
+        
+        // Option 2: Delete users if they should not exist without a company
+        // userRepository.delete(user);
+    }
+    
+    // Now delete the company
+    companyRepository.delete(company);
+}
 
     @Override
     @Transactional
@@ -146,6 +238,17 @@ public User findCompanyAdminByEmail(String email) {
     return userRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 }
+ @Override
+    public boolean isCompanyAdmin(User user) {
+        if (user == null || user.getCompany() == null) {
+            return false;
+        }
+
+        Company company = user.getCompany();
+
+        // Check if company names match and user is in admins list
+        return company.getAdmins().stream().anyMatch(admin -> admin.getId().equals(user.getId()));
+    }
 
        @Override
 public User findEmployerByEmail(String email) {
@@ -161,6 +264,8 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
         .map(this::convertToEmployerProfileDTO)
         .collect(Collectors.toList());
 }
+
+
 
     
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "companies")
@@ -46,7 +45,7 @@ public class Company {
 
 
 //    @EqualsAndHashCode.Exclude
-      @OneToMany(mappedBy = "company")
+      @OneToMany(mappedBy = "company",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore  // Add this to prevent recursion
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -54,13 +53,13 @@ public class Company {
 
 
 //    @EqualsAndHashCode.Exclude
-@OneToMany(mappedBy = "company")
+@OneToMany(mappedBy = "company",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore  // Add this to prevent recursion
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Job> jobs= new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "company_admins",
             joinColumns = @JoinColumn(name = "company_id"),

@@ -1,7 +1,6 @@
 package com.DcoDe.jobconnect.repositories;
 
 import com.DcoDe.jobconnect.entities.Candidate;
-import com.DcoDe.jobconnect.entities.Candidate;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.SavedJob;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +33,6 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     @Modifying
     @Query("DELETE FROM SavedJob sj WHERE sj.candidate.id = ?1")
     void deleteByCandidateId(Long candidateId);
+
+     void deleteByJob(Job job);
 }

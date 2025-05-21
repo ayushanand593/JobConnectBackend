@@ -6,9 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
+import com.DcoDe.jobconnect.dto.CompanyProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
 import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
 import com.DcoDe.jobconnect.dto.ImageUploadResponseDTO;
@@ -74,6 +77,44 @@ public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody Compan
     public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
         return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
     }
+
+    @PutMapping("/profile")
+   @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+    public ResponseEntity<CompanyDetailDTO> updateProfile(
+            @Valid @RequestBody CompanyProfileUpdateDTO profileDTO) {
+
+        User currentUser = SecurityUtils.getCurrentUser();
+
+        
+        
+        if (!companyService.isCompanyAdmin(currentUser)) {
+            throw new AccessDeniedException("Only company admins can update the profile");
+        }
+
+        return ResponseEntity.ok(companyService.updateCompanyProfile(profileDTO));
+    }
+
+  @DeleteMapping("/{companyUniqueId}/delete")
+@PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+@Operation(summary = "Delete company by unique ID")
+public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authorized");
+    }
+
+    Company company = companyService.findByCompanyUniqueId(companyUniqueId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+
+    // Check if the current user is an admin of the company
+    if (!company.getAdmins().contains(currentUser)) {
+        throw new AccessDeniedException("Not authorized to delete this company");
+    }
+
+    // Just pass the company ID instead of the entire entity
+    companyService.deleteCompanyById(companyUniqueId);
+    return ResponseEntity.ok("Company deleted successfully");
+}
 
      @PostMapping("/{companyUniqueId}/logo")
      @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")

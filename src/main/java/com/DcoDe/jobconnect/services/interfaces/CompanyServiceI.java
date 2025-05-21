@@ -19,4 +19,12 @@ public interface CompanyServiceI {
     User findEmployerByEmail(String email);
 
     List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId);
+
+    boolean isCompanyAdmin(User user);
+
+    CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO);
+
+    // void deleteCompany(Company company);
+
+     void deleteCompanyById(String companyUniqueId);
 }

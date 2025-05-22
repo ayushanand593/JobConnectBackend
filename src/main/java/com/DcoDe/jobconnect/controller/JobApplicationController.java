@@ -114,22 +114,5 @@ public class JobApplicationController {
         return ResponseEntity.ok(jobApplicationService.updateApplicationStatus(id, updateDTO));
     }
     
-     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    @Operation(summary = "Withdraw a job application")
-    public ResponseEntity<Void> withdrawApplication(@PathVariable Long id) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
-        
-        // Verify that the application belongs to the current candidate
-        JobApplicationDTO application = jobApplicationService.getJobApplication(id);
-        if (!application.getCandidateId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("You can only withdraw your own applications");
-        }
-        
-        jobApplicationService.withdrawApplication(id);
-        return ResponseEntity.noContent().build();
-    }
+     
 }

@@ -35,4 +35,8 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     void deleteByCandidateId(Long candidateId);
 
      void deleteByJob(Job job);
+
+      @Modifying
+    @Query("DELETE FROM SavedJob sj WHERE sj.job = :job")
+    int NumberOfDeletedJob(Job job);
 }

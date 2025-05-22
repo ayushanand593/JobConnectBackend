@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
 import com.DcoDe.jobconnect.entities.Skill;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.enums.JobType;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
@@ -191,15 +193,23 @@ public class JobServiceImpl implements JobServiceI {
         Job job = jobRepository.findByJobId(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
 
-        // Check if already applied
-        if (jobApplicationRepository.existsByJobIdAndCandidateId(job.getId(), candidate.getId())) {
-            throw new RuntimeException("You have already applied to this job");
-        }
         // If the job status is closed, throw an exception
         if (job.getStatus() == JobStatus.CLOSED) {
             throw new RuntimeException("This job is closed for applications");
         }
          
+// Update the applyToJob method - modify the existing check to exclude withdrawn applications
+        Optional<JobApplication> existingApplication = jobApplicationRepository.findByJobIdAndCandidateId(job.getId(), candidate.getId());
+
+if (existingApplication.isPresent()) {
+    ApplicationStatus status = existingApplication.get().getStatus();
+    if (status == ApplicationStatus.WITHDRAWN) {
+        throw new RuntimeException("You have withdrawn your application for this job and cannot reapply");
+    } else {
+        throw new RuntimeException("You have already applied to this job");
+    }
+}
+
 
           if (job.getApplicationDeadline() != null) {
             // Convert the deadline to LocalDateTime (end of day)

@@ -216,7 +216,9 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
       
 
         // Logic for withdrawal (could be delete or update status)
-        jobApplicationRepository.delete(application);
+      application.setStatus(ApplicationStatus.WITHDRAWN);
+    application.setUpdatedAt(LocalDateTime.now()); // Update the timestamp
+    jobApplicationRepository.save(application);
     }
 
      @Override

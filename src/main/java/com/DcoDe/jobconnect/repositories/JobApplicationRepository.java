@@ -1,14 +1,17 @@
 package com.DcoDe.jobconnect.repositories;
 import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.JobApplication;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,5 +34,16 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     List<JobApplication> findAllByJobIdIn(Collection<Long> jobIds);
 
+Optional<JobApplication> findByJobIdAndCandidateId(Long jobId, Long candidateId);
+
      void deleteByJob(Job job);
+
+     @Modifying
+    @Query("DELETE FROM JobApplication ja WHERE ja.status = :status AND ja.updatedAt < :cutoffDate")
+    int deleteByStatusAndUpdatedAtBefore(ApplicationStatus status, LocalDateTime cutoffDate);
+    
+    // Delete applications by job
+    @Modifying
+    @Query("DELETE FROM JobApplication ja WHERE ja.job = :job")
+    int NumberOfDeletedJob(Job job);
 }

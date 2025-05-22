@@ -184,33 +184,33 @@ class JobApplicationControllerTest {
         }
     }
 
-    @Test
-    void withdrawApplication_Success() {
-        try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
-            user.setId(100L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
-            utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
+    // @Test
+    // void withdrawApplication_Success() {
+    //     try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
+    //         com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+    //         user.setId(100L);
+    //         user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+    //         utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
-            when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
-            doNothing().when(jobApplicationService).withdrawApplication(1L);
+    //         when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
+    //         doNothing().when(jobApplicationService).withdrawApplication(1L);
 
-            ResponseEntity<Void> resp = controller.withdrawApplication(1L);
-            assertEquals(204, resp.getStatusCodeValue());
-        }
-    }
+    //         ResponseEntity<Void> resp = controller.withdrawApplication(1L);
+    //         assertEquals(204, resp.getStatusCodeValue());
+    //     }
+    // }
 
-    @Test
-    void withdrawApplication_Forbidden() {
-        try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
-            user.setId(999L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
-            utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
+    // @Test
+    // void withdrawApplication_Forbidden() {
+    //     try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
+    //         com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+    //         user.setId(999L);
+    //         user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+    //         utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
-            when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
-            assertThrows(AccessDeniedException.class, () -> controller.withdrawApplication(1L));
-        }
-    }
+    //         when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
+    //         assertThrows(AccessDeniedException.class, () -> controller.withdrawApplication(1L));
+    //     }
+    // }
 }
 

@@ -36,4 +36,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     
     @Query("SELECT j FROM Job j WHERE j.postedBy.id = ?1")
     List<Job> findByPostedBy(Long userId);
+
+    List<Job> findByApplicationDeadlineBefore(LocalDateTime cutoffDate);
 }

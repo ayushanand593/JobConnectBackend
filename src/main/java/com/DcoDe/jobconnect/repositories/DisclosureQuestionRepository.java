@@ -3,6 +3,8 @@ package com.DcoDe.jobconnect.repositories;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.DcoDe.jobconnect.entities.DisclosureQuestion;
@@ -13,4 +15,8 @@ public interface DisclosureQuestionRepository extends JpaRepository<DisclosureQu
     List<DisclosureQuestion> findAllByJobId(Long jobId);
 
      void deleteByJob(Job job);
+
+      @Modifying
+    @Query("DELETE FROM DisclosureQuestion dq WHERE dq.job = :job")
+    int NumberOfDeletedJob(Job job);
 }

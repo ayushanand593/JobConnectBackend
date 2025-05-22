@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,9 +24,11 @@ import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
 import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
 import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
+import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
 import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
 import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
@@ -206,18 +209,26 @@ public ResponseEntity<JobApplicationDetailDTO> getCandidateApplicationDetail(@Pa
     return ResponseEntity.ok(applicationDetail);
 }
 
- @DeleteMapping("/withdraw/applications/{applicationId}")
-    @Operation(summary = "Withdraw a job application for the current candidate")
+@PatchMapping("/withdraw/applications/{applicationId}")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    public ResponseEntity<String> withdrawApplication(@PathVariable Long applicationId) {
+    @Operation(summary = "Withdraw a job application")
+    public ResponseEntity<Void> withdrawApplication(@PathVariable Long applicationId) {
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Not authenticated");
         }
         
-        // Service should verify the application belongs to current user before withdrawal
+        // Verify that the application belongs to the current candidate
+        JobApplicationDTO application = jobApplicationService.getJobApplication(applicationId);
+        if (!application.getCandidateId().equals(currentUser.getCandidateProfile().getId())) {
+            throw new AccessDeniedException("You can only withdraw your own applications");
+        }
+        if(application.getStatus().equals(ApplicationStatus.WITHDRAWN)){ 
+            throw new AccessDeniedException("This application has already been withdrawn");
+        }
+        
         jobApplicationService.withdrawApplication(applicationId);
-        return ResponseEntity.ok("Job Application withdrawn successfully.");
+        return ResponseEntity.noContent().build();
     }
 }
 

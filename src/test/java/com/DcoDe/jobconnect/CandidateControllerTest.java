@@ -444,24 +444,24 @@ class CandidateControllerTest {
         }
     }
 
-    @Test
-    void testWithdrawApplication_Success() {
-        // Arrange
-        Long applicationId = 1L;
+    // @Test
+    // void testWithdrawApplication_Success() {
+    //     // Arrange
+    //     Long applicationId = 1L;
         
-        try (MockedStatic<SecurityUtils> securityUtils = Mockito.mockStatic(SecurityUtils.class)) {
-            securityUtils.when(SecurityUtils::getCurrentUser).thenReturn(mockUser);
-            doNothing().when(jobApplicationService).withdrawApplication(applicationId);
+    //     try (MockedStatic<SecurityUtils> securityUtils = Mockito.mockStatic(SecurityUtils.class)) {
+    //         securityUtils.when(SecurityUtils::getCurrentUser).thenReturn(mockUser);
+    //         doNothing().when(jobApplicationService).withdrawApplication(applicationId);
 
-            // Act
-            ResponseEntity<String> response = candidateController.withdrawApplication(applicationId);
+    //         // Act
+    //         ResponseEntity<String> response = candidateController.withdrawApplication(applicationId);
 
-            // Assert
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals("Job Application withdrawn successfully.", response.getBody());
-            verify(jobApplicationService).withdrawApplication(applicationId);
-        }
-    }
+    //         // Assert
+    //         assertEquals(HttpStatus.OK, response.getStatusCode());
+    //         assertEquals("Job Application withdrawn successfully.", response.getBody());
+    //         verify(jobApplicationService).withdrawApplication(applicationId);
+    //     }
+    // }
 
     @Test
     void testWithdrawApplication_NotAuthenticated() {

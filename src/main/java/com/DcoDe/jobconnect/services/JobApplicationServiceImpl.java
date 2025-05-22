@@ -213,6 +213,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         if (!application.getCandidate().getId().equals(candidate.getId())) {
             throw new AccessDeniedException("You don't have permission to withdraw this application");
         }
+      
 
         // Logic for withdrawal (could be delete or update status)
         jobApplicationRepository.delete(application);

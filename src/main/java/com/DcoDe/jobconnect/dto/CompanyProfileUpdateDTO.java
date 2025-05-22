@@ -16,4 +16,7 @@ public class CompanyProfileUpdateDTO {
     private String industry;
     private String size;
     private String logoUrl;
+    private String location;
+private String aboutUs;
+private String benefits;
 }

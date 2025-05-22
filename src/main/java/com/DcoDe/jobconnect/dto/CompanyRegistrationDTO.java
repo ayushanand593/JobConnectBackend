@@ -29,5 +29,8 @@ public class CompanyRegistrationDTO {
     private String size;
     private String website;
     private String description;
+    private String location;
+private String aboutUs;
+private String benefits;
 }
 

@@ -127,6 +127,15 @@ public class JobServiceImpl implements JobServiceI {
     public JobDTO getJobByJobId(String jobId) {
         Job job = jobRepository.findByJobId(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+           if (job.getApplicationDeadline() != null) {
+            // Convert the deadline to LocalDateTime (end of day)
+            LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(deadline)) {
+                job.setStatus(JobStatus.CLOSED);
+                jobRepository.save(job);
+            }
+        }
         return mapToJobDTO(job);
     }
 
@@ -189,6 +198,16 @@ public class JobServiceImpl implements JobServiceI {
         // If the job status is closed, throw an exception
         if (job.getStatus() == JobStatus.CLOSED) {
             throw new RuntimeException("This job is closed for applications");
+        }
+         
+
+          if (job.getApplicationDeadline() != null) {
+            // Convert the deadline to LocalDateTime (end of day)
+            LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(deadline)) {
+                throw new RuntimeException("The application deadline has ended");
+            }
         }
 
         JobApplication application = new JobApplication();

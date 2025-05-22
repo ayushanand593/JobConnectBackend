@@ -72,6 +72,9 @@ public class CompanyServiceImpl implements CompanyServiceI {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setAdmins(new HashSet<>());
+        company.setLocation(dto.getLocation());
+company.setAboutUs(dto.getAboutUs());
+company.setBenefits(dto.getBenefits());
 
         // Save company to get ID
         company = companyRepository.save(company);
@@ -129,6 +132,9 @@ public class CompanyServiceImpl implements CompanyServiceI {
         company.setWebsite(profileDTO.getWebsite());
         company.setIndustry(profileDTO.getIndustry());
         company.setSize(profileDTO.getSize());
+        company.setLocation(profileDTO.getLocation());
+company.setAboutUs(profileDTO.getAboutUs());
+company.setBenefits(profileDTO.getBenefits());
 
         company = companyRepository.save(company);
 
@@ -277,6 +283,9 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
         dto.setSize(company.getSize());
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
+        dto.setLocation(company.getLocation());
+dto.setAboutUs(company.getAboutUs());
+dto.setBenefits(company.getBenefits());
         // dto.setLogoUrl(company.getLogoUrl());
         dto.setLogoUrl(company.getLogoFileId());
         dto.setBannerUrl(company.getBannerFileId());

@@ -67,6 +67,15 @@ public class Company {
     )
     private Set<User> admins = new HashSet<>();
 
+    @Column(name = "location")
+private String location;
+
+@Column(name = "about_us", columnDefinition = "MEDIUMTEXT")
+private String aboutUs;
+
+@Column(name = "benefits", columnDefinition = "MEDIUMTEXT")
+private String benefits;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

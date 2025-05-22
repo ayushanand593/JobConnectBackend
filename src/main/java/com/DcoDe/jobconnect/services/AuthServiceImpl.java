@@ -1,11 +1,13 @@
 package com.DcoDe.jobconnect.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
 import com.DcoDe.jobconnect.dto.UserDTO;
 import com.DcoDe.jobconnect.entities.User;
+import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
 import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 import com.DcoDe.jobconnect.utils.CustomUserDetails;
@@ -34,23 +37,41 @@ public class AuthServiceImpl implements AuthServiceI {
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public User login(String email, String password) {
-        // Authenticate and throw exception if authentication fails
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(email, password)
-        );
-        
-        // If we reach here, authentication was successful
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getUser();
+@Override
+public User login(String email, String password, Boolean termsAccepted) {
+    // Authenticate first
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(email, password)
+    );
+    
+    // Get the authenticated user
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    
+    // Check if user has already accepted terms
+    if (user.getTermsAccepted() != null && user.getTermsAccepted()) {
+        // User has already accepted terms, no need to check again
+        return user;
     }
     
-    @Override
-    public JwtResponseDTO authenticateAndGenerateToken(String email, String password) {
-        User user = login(email, password);
-        return generateTokenForUser(user);
+    // User hasn't accepted terms yet - require acceptance
+    if (termsAccepted == null || !termsAccepted) {
+        throw new TermsNotAcceptedException("You must accept the terms and conditions to continue");
     }
+    
+    // First-time acceptance - update user record
+    user.setTermsAccepted(true);
+    user.setTermsAcceptedAt(LocalDateTime.now());
+    userRepository.save(user);
+    
+    return user;
+}
+    
+    @Override
+public JwtResponseDTO authenticateAndGenerateToken(String email, String password, Boolean termsAccepted) {
+    User user = login(email, password, termsAccepted);
+    return generateTokenForUser(user);
+}
     
     @Override
     public JwtResponseDTO generateTokenForUser(User user) {

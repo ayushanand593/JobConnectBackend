@@ -46,6 +46,12 @@ public class User {
     @JsonBackReference
     private EmployerProfile employerProfile;  // For EMPLOYER role
 
+    @Column(name = "terms_accepted")
+    private Boolean termsAccepted = false;
+
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

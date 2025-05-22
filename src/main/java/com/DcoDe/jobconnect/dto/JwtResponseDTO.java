@@ -1,5 +1,7 @@
 package com.DcoDe.jobconnect.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,4 +16,13 @@ public class JwtResponseDTO {
     @Builder.Default
     private String tokenType = "Bearer";
     private UserDTO user;
+
+   @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String error;
+    
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String message;
+    
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean requiresTermsAcceptance;
 }

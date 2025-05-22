@@ -12,5 +12,7 @@ public class LoginDTO {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+     private Boolean termsAccepted;
 }
 

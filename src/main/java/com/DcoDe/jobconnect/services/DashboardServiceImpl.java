@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO.EmployerDTO;
 import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO.JobListItemDTO;
 import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
@@ -30,7 +29,6 @@ import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import com.DcoDe.jobconnect.enums.JobStatus;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.repositories.CompanyRepository;
 import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
 import com.DcoDe.jobconnect.repositories.JobRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;

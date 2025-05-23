@@ -23,4 +23,6 @@ public class EmployeeRegistrationDTO {
 
     @NotBlank(message = "Company ID is required")
     private String companyUniqueId;
+
+    private boolean termsAccepted;
 }

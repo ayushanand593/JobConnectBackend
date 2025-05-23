@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.services;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import com.DcoDe.jobconnect.entities.Skill;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
+import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
 import com.DcoDe.jobconnect.repositories.CandidateRepository;
 import com.DcoDe.jobconnect.repositories.SkillRepository;
 import com.DcoDe.jobconnect.repositories.UserRepository;
@@ -53,12 +55,17 @@ public class CandidateServiceImpl implements CandidateServiceI {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateEmailException("Email already registered");
         }
+         if(!dto.isTermsAccepted()){
+            throw new TermsNotAcceptedException("You must accept the terms and conditions to continue");
+        }
 
         // Create user
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(UserRole.CANDIDATE);
+        user.setTermsAccepted(true);
+        user.setTermsAcceptedAt(LocalDateTime.now());
 
         // Save user to get ID
         user = userRepository.save(user);

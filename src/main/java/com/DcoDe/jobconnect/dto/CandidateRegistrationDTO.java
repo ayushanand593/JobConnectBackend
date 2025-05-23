@@ -28,4 +28,5 @@ public class CandidateRegistrationDTO {
     private String summary;
     private Integer experienceYears;
     private List<String> skills;
+    private boolean termsAccepted;
 }

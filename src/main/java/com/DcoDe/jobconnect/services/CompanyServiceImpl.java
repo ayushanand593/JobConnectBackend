@@ -1,5 +1,6 @@
 package com.DcoDe.jobconnect.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import com.DcoDe.jobconnect.entities.Job;
 import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.enums.UserRole;
 import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
+import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
 import com.DcoDe.jobconnect.repositories.CompanyRepository;
 import com.DcoDe.jobconnect.repositories.DisclosureQuestionRepository;
 import com.DcoDe.jobconnect.repositories.EmployerProfileRepository;
@@ -201,6 +203,9 @@ public void deleteCompanyById(String companyUniqueId) {
             throw new RuntimeException("Email already registered");
         }
 
+        if(!dto.isTermsAccepted()){
+            throw new TermsNotAcceptedException("You must accept the terms and conditions to continue");
+        }
         // Find company by unique ID
         Company company = companyRepository.findByCompanyUniqueId(dto.getCompanyUniqueId())
                 .orElseThrow(()-> new ResponseStatusException(
@@ -214,6 +219,8 @@ public void deleteCompanyById(String companyUniqueId) {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(UserRole.EMPLOYER);
         user.setCompany(company);
+        user.setTermsAccepted(true);
+        user.setTermsAcceptedAt(LocalDateTime.now());
 
         // Save user
         user = userRepository.save(user);

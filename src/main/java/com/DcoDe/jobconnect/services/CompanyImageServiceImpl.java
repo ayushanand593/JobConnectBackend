@@ -35,7 +35,7 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
     
     // Allowed content types for images
     private static final Set<String> ALLOWED_CONTENT_TYPES = new HashSet<>(Arrays.asList(
-            "image/jpeg", "image/png", "image/gif", "image/svg+xml"
+            "image/jpeg","image/jpg", "image/png", "image/gif", "image/svg+xml"
     ));
     
     // Image size limits
@@ -158,7 +158,7 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
         // Check file content type
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new InvalidImageException("Invalid file type. Allowed types: JPEG, PNG, GIF, SVG");
+            throw new InvalidImageException("Invalid file type. Allowed types: JPEG, JPG, PNG, GIF, SVG");
         }
         
         // Check file size

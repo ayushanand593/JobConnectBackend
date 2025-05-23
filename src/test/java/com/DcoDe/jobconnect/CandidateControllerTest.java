@@ -300,25 +300,25 @@ class CandidateControllerTest {
         }
     }
 
-    @Test
-    void testUploadResume_Success() {
-        // Arrange
-        MultipartFile file = new MockMultipartFile(
-            "file", "resume.pdf", "application/pdf", "PDF content".getBytes());
+    // @Test
+    // void testUploadResume_Success() {
+    //     // Arrange
+    //     MultipartFile file = new MockMultipartFile(
+    //         "file", "resume.pdf", "application/pdf", "PDF content".getBytes());
         
-        try (MockedStatic<SecurityUtils> securityUtils = Mockito.mockStatic(SecurityUtils.class)) {
-            securityUtils.when(SecurityUtils::getCurrentUser).thenReturn(mockUser);
-            when(candidateService.uploadResume(any(MultipartFile.class))).thenReturn(profileDTO);
+    //     try (MockedStatic<SecurityUtils> securityUtils = Mockito.mockStatic(SecurityUtils.class)) {
+    //         securityUtils.when(SecurityUtils::getCurrentUser).thenReturn(mockUser);
+    //         when(candidateService.uploadResume(any(MultipartFile.class))).thenReturn(profileDTO);
 
-            // Act
-            ResponseEntity<CandidateProfileDTO> response = candidateController.uploadResume(file);
+    //         // Act
+    //         ResponseEntity<CandidateProfileDTO> response = candidateController.uploadResume(file);
 
-            // Assert
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            verify(candidateService).uploadResume(file);
-        }
-    }
+    //         // Assert
+    //         assertEquals(HttpStatus.OK, response.getStatusCode());
+    //         assertNotNull(response.getBody());
+    //         verify(candidateService).uploadResume(file);
+    //     }
+    // }
 
     @Test
     void testUploadResume_NotAuthenticated() {

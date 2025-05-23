@@ -55,6 +55,7 @@ public class JobApplicationController {
     
      @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get a job application by ID")
     public ResponseEntity<JobApplicationDTO> getApplication(@PathVariable Long id) {
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
@@ -65,8 +66,8 @@ public class JobApplicationController {
         JobApplicationDTO application = jobApplicationService.getJobApplication(id);
         
         // Check if current user is the candidate who submitted the application
-        boolean isCandidate = currentUser.getRole().name().equals("CANDIDATE") && 
-                             application.getCandidateId().equals(currentUser.getId());
+        // boolean isCandidate = currentUser.getRole().name().equals("CANDIDATE") && 
+        //                      application.getCandidateId().equals(currentUser.getId());
         
         // Check if current user is the employer who owns the job
         // boolean isEmployer = jobApplicationService.isApplicationForJobPostedByEmployer(id, currentUser.getId());

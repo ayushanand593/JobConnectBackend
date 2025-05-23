@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +37,8 @@ import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -140,17 +143,22 @@ public class CandidateController {
         return ResponseEntity.ok("Candidate deleted successfully.");
     }
 
-     @PostMapping("/resume")
-    @Operation(summary = "Upload resume for the current candidate")
-    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    public ResponseEntity<CandidateProfileDTO> uploadResume(
-            @RequestParam("file") MultipartFile file) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
-        return ResponseEntity.ok(candidateService.uploadResume(file));
+@PostMapping(value = "/resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+@Operation(summary = "Upload resume for the current candidate")
+@PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+public ResponseEntity<CandidateProfileDTO> uploadResume(
+        @Parameter(
+            description = "Resume file to upload", 
+            required = true,
+            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+        )
+        @RequestParam("file") MultipartFile file) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authenticated");
     }
+    return ResponseEntity.ok(candidateService.uploadResume(file));
+}
 
 
    @GetMapping("/dashboard")

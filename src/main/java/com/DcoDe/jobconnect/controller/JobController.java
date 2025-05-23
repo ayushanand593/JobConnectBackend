@@ -3,6 +3,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DcoDe.jobconnect.components.FileTypeValidator;
 import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationDTO;
 import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
@@ -36,6 +38,9 @@ import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -114,22 +119,77 @@ public class JobController  {
         jobService.deleteJobByJobId(jobId);
         return ResponseEntity.ok("Job deleted successfully");
     }
-    @PostMapping("/apply/{jobId}")
-    @PreAuthorize("hasAuthority('CANDIDATE')")
-    @Operation(summary = "Apply to a job")
-    public ResponseEntity<JobApplicationDTO> applyToJob(
-            @PathVariable String jobId,
-            @RequestPart("applicationData") @Valid JobApplicationSubmissionDTO applicationCreateDTO,
-            @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
-            @RequestPart(value = "coverLetterFile", required = false) MultipartFile coverLetterFile) {
-        JobApplicationDTO applicationDTO = jobService.applyToJob(jobId, applicationCreateDTO, resumeFile, coverLetterFile);
-          User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Must be logged in to apply for a job");
-        }
+  @PostMapping(value = "/apply/{jobId}",  consumes = {
+    MediaType.MULTIPART_FORM_DATA_VALUE,
+    MediaType.APPLICATION_OCTET_STREAM_VALUE
+})
+@PreAuthorize("hasAuthority('CANDIDATE')")
+@Operation(
+    summary = "Apply to a job",
+    description = "Submit a job application with optional resume and cover letter files"
+)
+public ResponseEntity<JobApplicationDTO> applyToJob(
+        @PathVariable 
+        @Parameter(description = "Job ID to apply for", required = true) 
+        String jobId,
+        
+        @RequestPart(value="applicationData") 
+         @Parameter(
+      description = "Job application data in JSON format",
+      required = true,
+      content = @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = JobApplicationSubmissionDTO.class)
+      )
+    )
+        @Valid JobApplicationSubmissionDTO applicationCreateDTO,
+        
+        @RequestPart(value = "resumeFile", required = false)
+        @Parameter(
+            description = "Resume file (PDF, DOC, DOCX)", 
+            required = false,
+            content ={
+                @Content(mediaType = "application/pdf", schema = @Schema(type = "string", format = "binary")),
+                @Content(mediaType = "application/text", schema = @Schema(type = "string", format = "binary")),
+                @Content(mediaType = "application/msword", schema = @Schema(type = "string", format = "binary")),
+            }
+        )
+        MultipartFile resumeFile,
+        
+        @RequestPart(value = "coverLetterFile", required = false)
+        @Parameter(
+            description = "Cover letter file (PDF, DOC, DOCX)", 
+            required = false,
+             content ={
+                @Content(mediaType = "application/pdf", schema = @Schema(type = "string", format = "binary")),
+                @Content(mediaType = "application/text", schema = @Schema(type = "string", format = "binary")),
+                @Content(mediaType = "application/msword", schema = @Schema(type = "string", format = "binary")),
+            }
+        )
+        MultipartFile coverLetterFile) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(applicationDTO);
+            // 1) Validate file parts
+    List<String> allowedTypes = List.of(
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      // docx
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
+
+     FileTypeValidator.validateMimeType(resumeFile,      allowedTypes, "resumeFile");
+    FileTypeValidator.validateMimeType(coverLetterFile, allowedTypes, "coverLetterFile");
+
+       
+    
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Must be logged in to apply for a job");
     }
+    
+    JobApplicationDTO applicationDTO = jobService.applyToJob(jobId, applicationCreateDTO, resumeFile, coverLetterFile);
+    return ResponseEntity.status(HttpStatus.CREATED).body(applicationDTO);
+}
 
      @PostMapping("/search")
      @Operation(summary = "Search for jobs")
@@ -217,6 +277,7 @@ public class JobController  {
     }
 
     
+}
 
    
-}
+

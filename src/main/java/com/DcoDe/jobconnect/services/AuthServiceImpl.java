@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -40,7 +39,7 @@ public class AuthServiceImpl implements AuthServiceI {
 @Override
 public User login(String email, String password, Boolean termsAccepted) {
     // Authenticate first
-    Authentication authentication = authenticationManager.authenticate(
+    authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(email, password)
     );
     

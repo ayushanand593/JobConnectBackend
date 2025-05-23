@@ -12,21 +12,23 @@ import com.DcoDe.jobconnect.dto.JwtResponseDTO;
 import com.DcoDe.jobconnect.dto.LoginDTO;
 import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
 import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
-import com.DcoDe.jobconnect.repositories.UserRepository;
 import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "API for managing authentication and authorization endpoints")
 public class AuthController  {
 
     private final AuthServiceI authService;
-    private final UserRepository userRepository;
 
 @PostMapping("/login")
+@Operation(summary = "Login", description = "Authenticate user and return JWT token")
 public ResponseEntity<JwtResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
     try {
         JwtResponseDTO response = authService.authenticateAndGenerateToken(
@@ -46,12 +48,14 @@ public ResponseEntity<JwtResponseDTO> login(@Valid @RequestBody LoginDTO loginDT
     }
 }
      @PutMapping("/update-email")
+     @Operation(summary = "Update Email", description = "Update user email and require re-login")
     public ResponseEntity<String> updateEmail(@Valid @RequestBody EmailUpdateDTO emailUpdateDTO) {
         authService.updateEmail(emailUpdateDTO);
         return ResponseEntity.ok("Email updated successfully. Please login again.");
     }
 
     @PutMapping("/update-password")
+    @Operation(summary = "Update Password", description = "Update user password and require re-login")
     public ResponseEntity<String> updatePassword(@Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
         authService.updatePassword(passwordUpdateDTO);
         return ResponseEntity.ok("Password updated successfully. Please login again.");

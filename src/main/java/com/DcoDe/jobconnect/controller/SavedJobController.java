@@ -8,6 +8,8 @@ import com.DcoDe.jobconnect.entities.User;
 import com.DcoDe.jobconnect.services.interfaces.SavedJobServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/saved-jobs")
 @RequiredArgsConstructor
+@Tag (name = "Saved Jobs", description = "API for managing saved jobs.")
 public class SavedJobController {
 
     private final SavedJobServiceI savedJobService;
@@ -31,7 +34,8 @@ public class SavedJobController {
      * Save a job for the current candidate
      */
  @PostMapping("/{jobId}")
-@PreAuthorize("hasAuthority('CANDIDATE') || hasAuthority('ROLE_CANDIDATE')")
+@PreAuthorize("hasAuthority('CANDIDATE') or hasAuthority('ROLE_CANDIDATE')")
+@Operation(summary = "Save a job by it's jobId")
 public ResponseEntity<?> saveJob(@PathVariable String jobId) {
     User user = SecurityUtils.getCurrentUser();
     Long candidateId = user.getCandidateProfile().getId();
@@ -67,7 +71,8 @@ private SavedJobDTO convertToDTO(SavedJob savedJob) {
      * Remove a saved job
      */
     @DeleteMapping("/{jobId}")
-    @PreAuthorize("hasAuthority('CANDIDATE') || hasAuthority('ROLE_CANDIDATE')")
+    @PreAuthorize("hasAuthority('CANDIDATE') or hasAuthority('ROLE_CANDIDATE')")
+    @Operation(summary = "Remove a saved job by it's jobId")
     public ResponseEntity<?> unsaveJob(@PathVariable String jobId) {
         User user = SecurityUtils.getCurrentUser();
     Long candidateId = user.getCandidateProfile().getId();
@@ -87,7 +92,8 @@ private SavedJobDTO convertToDTO(SavedJob savedJob) {
      * Get all saved jobs for current candidate
      */
     @GetMapping
-   @PreAuthorize("hasAuthority('CANDIDATE') || hasAuthority('ROLE_CANDIDATE')")
+   @PreAuthorize("hasAuthority('CANDIDATE') or hasAuthority('ROLE_CANDIDATE')")
+   @Operation(summary = "Get all saved jobs for the current candidate")
    public ResponseEntity<?> getSavedJobs() {
             User user = SecurityUtils.getCurrentUser();
     Long candidateId = user.getCandidateProfile().getId();
@@ -121,6 +127,7 @@ private SavedJobDTO convertToDTO(SavedJob savedJob) {
      */
     @GetMapping("/{jobId}/is-saved")
     @PreAuthorize("hasAuthority('CANDIDATE') or hasAuthority('ROLE_CANDIDATE')")
+    @Operation(summary = "Check if a job is saved by the current candidate")
     public ResponseEntity<?> isJobSaved(@PathVariable String jobId) {
 
           User user = SecurityUtils.getCurrentUser();

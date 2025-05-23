@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +38,8 @@ import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
 import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -122,11 +125,16 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
     return ResponseEntity.ok("Company deleted successfully");
 }
 
-     @PostMapping("/{companyUniqueId}/logo")
+     @PostMapping(value="/{companyUniqueId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
      @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
     @Operation(summary = "Upload company logo")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyLogo(
             @PathVariable String companyUniqueId,
+             @Parameter(
+            description = "Resume file to upload", 
+            required = true,
+            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+        )
             @RequestParam("file") MultipartFile file) {
 
          User currentUser = SecurityUtils.getCurrentUser();
@@ -149,11 +157,16 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
                 .body(new ImageUploadResponseDTO(fileId, "Logo uploaded successfully"));
     }
     
-    @PostMapping("/{companyUniqueId}/banner")
+    @PostMapping(value="/{companyUniqueId}/banner",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
     @Operation(summary = "Upload company banner")
     public ResponseEntity<ImageUploadResponseDTO> uploadCompanyBanner(
             @PathVariable String companyUniqueId,
+              @Parameter(
+            description = "Resume file to upload", 
+            required = true,
+            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+        )
             @RequestParam("file") MultipartFile file) {
 
           User currentUser = SecurityUtils.getCurrentUser();
@@ -199,6 +212,7 @@ public ResponseEntity<List<EmployerProfileDTO>> getCompanyEmployees(
 }
  @GetMapping("dashboard")
  @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+ @Operation(summary = "Get company dashboard statistics")
     public ResponseEntity<CompanyDashboardStatsDTO> getCompanyDashboardStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {

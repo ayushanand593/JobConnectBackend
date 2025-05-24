@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@SuppressWarnings("squid:S4502")
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;

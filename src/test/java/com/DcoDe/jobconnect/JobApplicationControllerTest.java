@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect;
+package com.dcode.jobconnect;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

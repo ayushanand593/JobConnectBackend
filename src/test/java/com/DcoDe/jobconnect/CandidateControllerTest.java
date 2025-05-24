@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect;
+package com.dcode.jobconnect;
 
 
 

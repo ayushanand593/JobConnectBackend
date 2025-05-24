@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.repositories;
+package com.dcode.jobconnect.repositories;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.DcoDe.jobconnect.entities.DisclosureQuestion;
-import com.DcoDe.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.DisclosureQuestion;
+import com.dcode.jobconnect.entities.Job;
 
 @Repository
 public interface DisclosureQuestionRepository extends JpaRepository<DisclosureQuestion, Long> {

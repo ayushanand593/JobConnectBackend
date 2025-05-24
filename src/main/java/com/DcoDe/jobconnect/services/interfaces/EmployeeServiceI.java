@@ -1,10 +1,10 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 
-import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
-import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.JobDTO;
+import com.dcode.jobconnect.dto.EmployerProfileDTO;
+import com.dcode.jobconnect.dto.EmployerProfileUpdateDTO;
+import com.dcode.jobconnect.dto.JobDTO;
 
 public interface EmployeeServiceI {
 

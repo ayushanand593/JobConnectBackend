@@ -1,8 +1,8 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 import java.time.LocalDateTime;
 
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.enums.ApplicationStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

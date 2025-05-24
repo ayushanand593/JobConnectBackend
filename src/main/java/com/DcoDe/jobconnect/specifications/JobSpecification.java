@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.specifications;
+package com.dcode.jobconnect.specifications;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import com.DcoDe.jobconnect.dto.JobSearchRequestDTO;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.Skill;
+import com.dcode.jobconnect.dto.JobSearchRequestDTO;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.Skill;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;

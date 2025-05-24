@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.controller;
+package com.dcode.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,20 +21,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
-import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
-import com.DcoDe.jobconnect.dto.JwtResponseDTO;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
-import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
-import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
-import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+import com.dcode.jobconnect.dto.CandidateDashboardStatsDTO;
+import com.dcode.jobconnect.dto.CandidateProfileDTO;
+import com.dcode.jobconnect.dto.CandidateProfileUpdateDTO;
+import com.dcode.jobconnect.dto.CandidateRegistrationDTO;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationDetailDTO;
+import com.dcode.jobconnect.dto.JwtResponseDTO;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.services.interfaces.AuthServiceI;
+import com.dcode.jobconnect.services.interfaces.CandidateServiceI;
+import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
+import com.dcode.jobconnect.services.interfaces.JobApplicationServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

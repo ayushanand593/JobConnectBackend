@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.exceptions;
+package com.dcode.jobconnect.exceptions;
 
 public class TermsNotAcceptedException extends RuntimeException {
     public TermsNotAcceptedException(String message) {

@@ -1,5 +1,5 @@
-package com.DcoDe.jobconnect.entities;
-import com.DcoDe.jobconnect.enums.UserRole;
+package com.dcode.jobconnect.entities;
+import com.dcode.jobconnect.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

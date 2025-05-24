@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;

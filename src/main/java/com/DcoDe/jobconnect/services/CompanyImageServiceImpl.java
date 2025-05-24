@@ -1,11 +1,4 @@
-package com.DcoDe.jobconnect.services;
-
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.exceptions.CompanyNotFoundException;
-import com.DcoDe.jobconnect.exceptions.InvalidImageException;
-import com.DcoDe.jobconnect.repositories.CompanyRepository;
-import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
+package com.dcode.jobconnect.services;
 
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +6,13 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.exceptions.CompanyNotFoundException;
+import com.dcode.jobconnect.exceptions.InvalidImageException;
+import com.dcode.jobconnect.repositories.CompanyRepository;
+import com.dcode.jobconnect.services.interfaces.CompanyImageServiceI;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

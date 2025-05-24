@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.controller;
+package com.dcode.jobconnect.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.DcoDe.jobconnect.dto.EmailUpdateDTO;
-import com.DcoDe.jobconnect.dto.JwtResponseDTO;
-import com.DcoDe.jobconnect.dto.LoginDTO;
-import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
-import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
-import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
+import com.dcode.jobconnect.dto.EmailUpdateDTO;
+import com.dcode.jobconnect.dto.JwtResponseDTO;
+import com.dcode.jobconnect.dto.LoginDTO;
+import com.dcode.jobconnect.dto.PasswordUpdateDTO;
+import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
+import com.dcode.jobconnect.services.interfaces.AuthServiceI;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

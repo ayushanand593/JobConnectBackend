@@ -1,11 +1,4 @@
-package com.DcoDe.jobconnect.controller;
-
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+package com.dcode.jobconnect.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +12,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobApplicationUpdateDTO;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.services.interfaces.JobApplicationServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 @RestController
 @RequestMapping("/api/applications")

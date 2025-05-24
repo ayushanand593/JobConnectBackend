@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 import lombok.Data;
 import java.time.LocalDateTime;

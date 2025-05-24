@@ -1,8 +1,8 @@
-package com.DcoDe.jobconnect.entities;
+package com.dcode.jobconnect.entities;
 
 
-import com.DcoDe.jobconnect.enums.JobStatus;
-import com.DcoDe.jobconnect.enums.JobType;
+import com.dcode.jobconnect.enums.JobStatus;
+import com.dcode.jobconnect.enums.JobType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;

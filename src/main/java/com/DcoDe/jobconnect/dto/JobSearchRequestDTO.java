@@ -1,10 +1,10 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 import lombok.Data;
 
 import java.util.List;
 
-import com.DcoDe.jobconnect.enums.JobType;
+import com.dcode.jobconnect.enums.JobType;
 
 @Data
 public class JobSearchRequestDTO {

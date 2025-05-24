@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.exceptions;
+package com.dcode.jobconnect.exceptions;
 
 public class FileNotFoundException extends RuntimeException {
     public FileNotFoundException(String message) {

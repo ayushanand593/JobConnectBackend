@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.entities;
+package com.dcode.jobconnect.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;

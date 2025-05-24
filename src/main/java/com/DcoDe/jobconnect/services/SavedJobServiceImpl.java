@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.DcoDe.jobconnect.entities.Candidate;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.SavedJob;
-import com.DcoDe.jobconnect.repositories.CandidateRepository;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.repositories.SavedJobRepository;
-import com.DcoDe.jobconnect.services.interfaces.SavedJobServiceI;
+import com.dcode.jobconnect.entities.Candidate;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.SavedJob;
+import com.dcode.jobconnect.repositories.CandidateRepository;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.SavedJobRepository;
+import com.dcode.jobconnect.services.interfaces.SavedJobServiceI;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

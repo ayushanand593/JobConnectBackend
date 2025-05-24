@@ -1,10 +1,9 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 
-// import com.DcoDe.jobconnect.entities.Candidate;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.SavedJob;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.SavedJob;
 
 public interface SavedJobServiceI {
 

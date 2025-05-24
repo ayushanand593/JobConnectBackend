@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.config;
+package com.dcode.jobconnect.config;
 
 
 import java.util.Arrays;
@@ -21,9 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import static org.springframework.security.config.Customizer.withDefaults;
 
-import com.DcoDe.jobconnect.security.JwtAuthenticationFilter;
+import com.dcode.jobconnect.security.JwtAuthenticationFilter;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 import lombok.RequiredArgsConstructor;
 

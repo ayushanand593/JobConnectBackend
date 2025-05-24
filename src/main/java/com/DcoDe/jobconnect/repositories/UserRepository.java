@@ -1,11 +1,12 @@
-package com.DcoDe.jobconnect.repositories;
+package com.dcode.jobconnect.repositories;
 
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.User;
 
 import java.util.List;
 import java.util.Optional;

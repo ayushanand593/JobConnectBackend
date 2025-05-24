@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.util.stream.Collectors;
 
@@ -8,14 +8,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.DcoDe.jobconnect.dto.JobSearchRequestDTO;
-import com.DcoDe.jobconnect.dto.JobSearchResponseDTO;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.Skill;
-import com.DcoDe.jobconnect.repositories.JobSearchRepository;
-import com.DcoDe.jobconnect.services.interfaces.JobSearchServiceI;
-import com.DcoDe.jobconnect.specifications.JobSpecification;
-
+import com.dcode.jobconnect.dto.JobSearchRequestDTO;
+import com.dcode.jobconnect.dto.JobSearchResponseDTO;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.Skill;
+import com.dcode.jobconnect.repositories.JobSearchRepository;
+import com.dcode.jobconnect.services.interfaces.JobSearchServiceI;
+import com.dcode.jobconnect.specifications.JobSpecification;
 
 import lombok.RequiredArgsConstructor;
 

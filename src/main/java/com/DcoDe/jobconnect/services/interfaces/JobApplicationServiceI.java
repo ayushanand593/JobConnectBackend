@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 
@@ -6,10 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobApplicationUpdateDTO;
+import com.dcode.jobconnect.enums.ApplicationStatus;
 
 public interface JobApplicationServiceI {
         JobApplicationDTO submitApplication(JobApplicationSubmissionDTO submissionDTO,MultipartFile resumeFile,MultipartFile coverLetterFile);

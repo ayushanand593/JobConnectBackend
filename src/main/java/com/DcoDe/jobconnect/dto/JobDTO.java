@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.DcoDe.jobconnect.enums.JobStatus;
+import com.dcode.jobconnect.enums.JobStatus;
 
 @Data
 public class JobDTO {

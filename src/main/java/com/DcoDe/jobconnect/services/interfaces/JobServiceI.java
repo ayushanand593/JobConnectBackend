@@ -1,17 +1,17 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobCreateDTO;
-import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.enums.JobStatus;
+import com.dcode.jobconnect.dto.DisclosureQuestionDTO;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobCreateDTO;
+import com.dcode.jobconnect.dto.JobDTO;
+import com.dcode.jobconnect.dto.JobDisclosureQuestionsDTO;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.enums.JobStatus;
 
 public interface JobServiceI {
 

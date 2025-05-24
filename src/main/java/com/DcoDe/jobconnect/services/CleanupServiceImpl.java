@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-import com.DcoDe.jobconnect.repositories.DisclosureQuestionRepository;
-import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.repositories.SavedJobRepository;
-import com.DcoDe.jobconnect.services.interfaces.CleanupServiceI;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.repositories.DisclosureQuestionRepository;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.SavedJobRepository;
+import com.dcode.jobconnect.services.interfaces.CleanupServiceI;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -14,25 +14,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
-import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
-import com.DcoDe.jobconnect.dto.SkillDTO;
-import com.DcoDe.jobconnect.entities.Candidate;
-import com.DcoDe.jobconnect.entities.FileDocument;
-import com.DcoDe.jobconnect.entities.Skill;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.UserRole;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
-import com.DcoDe.jobconnect.repositories.CandidateRepository;
-import com.DcoDe.jobconnect.repositories.SkillRepository;
-import com.DcoDe.jobconnect.repositories.UserRepository;
-import com.DcoDe.jobconnect.services.interfaces.CandidateServiceI;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
-
-import com.DcoDe.jobconnect.exceptions.DuplicateEmailException;
+import com.dcode.jobconnect.dto.CandidateProfileDTO;
+import com.dcode.jobconnect.dto.CandidateProfileUpdateDTO;
+import com.dcode.jobconnect.dto.CandidateRegistrationDTO;
+import com.dcode.jobconnect.dto.SkillDTO;
+import com.dcode.jobconnect.entities.Candidate;
+import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.entities.Skill;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.UserRole;
+import com.dcode.jobconnect.exceptions.DuplicateEmailException;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
+import com.dcode.jobconnect.repositories.CandidateRepository;
+import com.dcode.jobconnect.repositories.SkillRepository;
+import com.dcode.jobconnect.repositories.UserRepository;
+import com.dcode.jobconnect.services.interfaces.CandidateServiceI;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

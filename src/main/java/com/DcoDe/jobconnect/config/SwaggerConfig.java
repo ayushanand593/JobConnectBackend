@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.config;
+package com.dcode.jobconnect.config;
 
 import java.util.ArrayList;
 

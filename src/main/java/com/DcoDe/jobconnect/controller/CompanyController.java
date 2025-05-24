@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.controller;
+package com.dcode.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,22 +20,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CompanyDetailDTO;
-import com.DcoDe.jobconnect.dto.CompanyProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.CompanyRegistrationDTO;
-import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
-import com.DcoDe.jobconnect.dto.ImageUploadResponseDTO;
-import com.DcoDe.jobconnect.dto.JwtResponseDTO;
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
-import com.DcoDe.jobconnect.services.interfaces.CompanyImageServiceI;
-import com.DcoDe.jobconnect.services.interfaces.CompanyServiceI;
-import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
-// import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+import com.dcode.jobconnect.dto.CompanyDashboardStatsDTO;
+import com.dcode.jobconnect.dto.CompanyDetailDTO;
+import com.dcode.jobconnect.dto.CompanyProfileUpdateDTO;
+import com.dcode.jobconnect.dto.CompanyRegistrationDTO;
+import com.dcode.jobconnect.dto.EmployerProfileDTO;
+import com.dcode.jobconnect.dto.ImageUploadResponseDTO;
+import com.dcode.jobconnect.dto.JwtResponseDTO;
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.services.interfaces.AuthServiceI;
+import com.dcode.jobconnect.services.interfaces.CompanyImageServiceI;
+import com.dcode.jobconnect.services.interfaces.CompanyServiceI;
+import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

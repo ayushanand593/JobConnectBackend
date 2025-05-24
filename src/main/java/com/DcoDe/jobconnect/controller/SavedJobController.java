@@ -1,12 +1,4 @@
-package com.DcoDe.jobconnect.controller;
-
-import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.dto.SavedJobDTO;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.SavedJob;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.services.interfaces.SavedJobServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+package com.dcode.jobconnect.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import com.dcode.jobconnect.dto.JobDTO;
+import com.dcode.jobconnect.dto.SavedJobDTO;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.SavedJob;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.services.interfaces.SavedJobServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;

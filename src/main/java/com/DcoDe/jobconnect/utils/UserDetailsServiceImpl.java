@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.utils;
+package com.dcode.jobconnect.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,8 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.repositories.UserRepository;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.repositories.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 

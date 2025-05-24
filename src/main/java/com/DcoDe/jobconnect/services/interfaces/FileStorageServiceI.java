@@ -1,7 +1,8 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
-import com.DcoDe.jobconnect.entities.FileDocument;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.entities.FileDocument;
 
 public interface FileStorageServiceI {
     /**

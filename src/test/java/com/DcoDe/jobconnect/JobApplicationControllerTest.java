@@ -1,12 +1,5 @@
 package com.DcoDe.jobconnect;
 
-import com.DcoDe.jobconnect.controller.JobApplicationController;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +13,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.controller.JobApplicationController;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobApplicationUpdateDTO;
+import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.services.interfaces.JobApplicationServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 
@@ -66,9 +68,9 @@ class JobApplicationControllerTest {
 
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
             // authenticated candidate
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(100L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.CANDIDATE);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.submitApplication(eq(submissionDto), eq(resume), eq(cover)))
@@ -93,9 +95,9 @@ class JobApplicationControllerTest {
     @Test
     void getApplication_CandidateAccess() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(100L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.CANDIDATE);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
@@ -109,9 +111,9 @@ class JobApplicationControllerTest {
     @Test
     void getApplication_EmployerAccess() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(500L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.EMPLOYER);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.EMPLOYER);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
@@ -126,9 +128,9 @@ class JobApplicationControllerTest {
     @Test
     void getApplication_Forbidden() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(300L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.CANDIDATE);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.getJobApplication(1L)).thenReturn(sampleDto);
@@ -140,9 +142,9 @@ class JobApplicationControllerTest {
     @Test
     void getMyApplications_Success() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(100L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.CANDIDATE);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.CANDIDATE);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             Page<JobApplicationDTO> page = new PageImpl<>(Collections.singletonList(sampleDto), PageRequest.of(0,10), 1);
@@ -157,9 +159,9 @@ class JobApplicationControllerTest {
     @Test
     void updateApplicationStatus_Success() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(500L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.EMPLOYER);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.EMPLOYER);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.isApplicationForEmployerJob(1L, 500L)).thenReturn(true);
@@ -174,9 +176,9 @@ class JobApplicationControllerTest {
     @Test
     void updateApplicationStatus_Forbidden() {
         try (MockedStatic<SecurityUtils> utils = Mockito.mockStatic(SecurityUtils.class)) {
-            com.DcoDe.jobconnect.entities.User user = new com.DcoDe.jobconnect.entities.User();
+            com.dcode.jobconnect.entities.User user = new com.dcode.jobconnect.entities.User();
             user.setId(500L);
-            user.setRole(com.DcoDe.jobconnect.enums.UserRole.EMPLOYER);
+            user.setRole(com.dcode.jobconnect.enums.UserRole.EMPLOYER);
             utils.when(SecurityUtils::getCurrentUser).thenReturn(user);
 
             when(jobApplicationService.isApplicationForEmployerJob(1L, 500L)).thenReturn(false);

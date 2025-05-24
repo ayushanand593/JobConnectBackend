@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.utils;
+package com.dcode.jobconnect.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.DcoDe.jobconnect.config.JwtConfig;
-import com.DcoDe.jobconnect.entities.User;
+import com.dcode.jobconnect.config.JwtConfig;
+import com.dcode.jobconnect.entities.User;
 
 import java.security.Key;
 import java.util.Date;

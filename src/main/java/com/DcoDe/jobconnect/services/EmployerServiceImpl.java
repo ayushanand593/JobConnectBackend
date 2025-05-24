@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,23 +6,22 @@ import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
-import com.DcoDe.jobconnect.dto.EmployerProfileDTO;
-import com.DcoDe.jobconnect.dto.EmployerProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.dto.SkillDTO;
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.entities.EmployerProfile;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.UserRole;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-// import com.DcoDe.jobconnect.repositories.CompanyRepository;
-import com.DcoDe.jobconnect.repositories.EmployerProfileRepository;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.repositories.UserRepository;
-import com.DcoDe.jobconnect.services.interfaces.EmployeeServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+import com.dcode.jobconnect.dto.DisclosureQuestionDTO;
+import com.dcode.jobconnect.dto.EmployerProfileDTO;
+import com.dcode.jobconnect.dto.EmployerProfileUpdateDTO;
+import com.dcode.jobconnect.dto.JobDTO;
+import com.dcode.jobconnect.dto.SkillDTO;
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.EmployerProfile;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.UserRole;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.EmployerProfileRepository;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.UserRepository;
+import com.dcode.jobconnect.services.interfaces.EmployeeServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 // import java.util.stream.Collectors;
 

@@ -1,11 +1,11 @@
-package com.DcoDe.jobconnect.services.interfaces;
-
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.dto.*;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 import java.util.Optional;
+
+import com.dcode.jobconnect.dto.*;
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.User;
 
 public interface CompanyServiceI {
  CompanyDetailDTO registerCompany(CompanyRegistrationDTO dto);

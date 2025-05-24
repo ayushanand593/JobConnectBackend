@@ -1,24 +1,4 @@
-package com.DcoDe.jobconnect.services;
-
-import com.DcoDe.jobconnect.dto.DisclosureAnswerDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationUpdateDTO;
-import com.DcoDe.jobconnect.entities.Candidate;
-import com.DcoDe.jobconnect.entities.DisclosureAnswer;
-import com.DcoDe.jobconnect.entities.FileDocument;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.JobApplication;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.repositories.CandidateRepository;
-import com.DcoDe.jobconnect.repositories.DisclosureAnswerRepository;
-import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
-import com.DcoDe.jobconnect.services.interfaces.JobApplicationServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+package com.dcode.jobconnect.services;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +8,26 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.dto.DisclosureAnswerDTO;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobApplicationUpdateDTO;
+import com.dcode.jobconnect.entities.Candidate;
+import com.dcode.jobconnect.entities.DisclosureAnswer;
+import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.JobApplication;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.CandidateRepository;
+import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
+import com.dcode.jobconnect.services.interfaces.JobApplicationServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import org.springframework.web.multipart.MultipartFile;
 

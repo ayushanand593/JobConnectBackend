@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import com.DcoDe.jobconnect.enums.JobType;
+import com.dcode.jobconnect.enums.JobType;
 
 @Data
 @Builder

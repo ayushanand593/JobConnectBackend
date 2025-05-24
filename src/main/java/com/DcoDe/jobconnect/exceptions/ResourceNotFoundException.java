@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.exceptions;
+package com.dcode.jobconnect.exceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

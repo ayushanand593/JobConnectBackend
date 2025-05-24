@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect;
+package com.dcode.jobconnect;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

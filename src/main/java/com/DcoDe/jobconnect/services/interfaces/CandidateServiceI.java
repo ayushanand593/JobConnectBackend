@@ -1,11 +1,11 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.dto.CandidateProfileDTO;
-import com.DcoDe.jobconnect.dto.CandidateProfileUpdateDTO;
-import com.DcoDe.jobconnect.dto.CandidateRegistrationDTO;
-import com.DcoDe.jobconnect.entities.User;
+import com.dcode.jobconnect.dto.CandidateProfileDTO;
+import com.dcode.jobconnect.dto.CandidateProfileUpdateDTO;
+import com.dcode.jobconnect.dto.CandidateRegistrationDTO;
+import com.dcode.jobconnect.entities.User;
 
 public interface CandidateServiceI {
 CandidateProfileDTO registerCandidate(CandidateRegistrationDTO dto);

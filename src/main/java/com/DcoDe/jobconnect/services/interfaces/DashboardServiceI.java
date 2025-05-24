@@ -1,12 +1,12 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
+import com.dcode.jobconnect.dto.CandidateDashboardStatsDTO;
+import com.dcode.jobconnect.dto.CompanyDashboardStatsDTO;
+import com.dcode.jobconnect.dto.EmployerDashboardStatsDTO;
+import com.dcode.jobconnect.dto.JobApplicationDetailDTO;
 
 public interface DashboardServiceI {
      CandidateDashboardStatsDTO getCandidateDashboardStats(LocalDate startDate, LocalDate endDate);

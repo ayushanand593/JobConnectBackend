@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,28 +15,28 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import com.DcoDe.jobconnect.dto.CandidateDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.CompanyDashboardStatsDTO.JobListItemDTO;
-import com.DcoDe.jobconnect.dto.EmployerDashboardStatsDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDetailDTO;
-import com.DcoDe.jobconnect.entities.Company;
-import com.DcoDe.jobconnect.entities.FileDocument;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.JobApplication;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-import com.DcoDe.jobconnect.enums.JobStatus;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.repositories.JobApplicationRepository;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.repositories.UserRepository;
-import com.DcoDe.jobconnect.services.interfaces.DashboardServiceI;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
-import com.DcoDe.jobconnect.exceptions.FileNotFoundException;
+
+import com.dcode.jobconnect.dto.CandidateDashboardStatsDTO;
+import com.dcode.jobconnect.dto.CompanyDashboardStatsDTO;
+import com.dcode.jobconnect.dto.EmployerDashboardStatsDTO;
+import com.dcode.jobconnect.dto.JobApplicationDetailDTO;
+import com.dcode.jobconnect.dto.CompanyDashboardStatsDTO.JobListItemDTO;
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.JobApplication;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.enums.JobStatus;
+import com.dcode.jobconnect.exceptions.FileNotFoundException;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.UserRepository;
+import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 

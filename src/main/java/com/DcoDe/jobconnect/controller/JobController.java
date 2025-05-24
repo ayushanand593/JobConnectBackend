@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.controller;
+package com.dcode.jobconnect.controller;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -19,23 +19,23 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.DcoDe.jobconnect.components.FileTypeValidator;
-import com.DcoDe.jobconnect.dto.DisclosureQuestionDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationDTO;
-import com.DcoDe.jobconnect.dto.JobApplicationSubmissionDTO;
-import com.DcoDe.jobconnect.dto.JobCreateDTO;
-import com.DcoDe.jobconnect.dto.JobDTO;
-import com.DcoDe.jobconnect.dto.JobDisclosureQuestionsDTO;
-import com.DcoDe.jobconnect.dto.JobSearchRequestDTO;
-import com.DcoDe.jobconnect.dto.JobSearchResponseDTO;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.enums.JobType;
-import com.DcoDe.jobconnect.exceptions.ResourceNotFoundException;
-import com.DcoDe.jobconnect.repositories.JobRepository;
-import com.DcoDe.jobconnect.services.interfaces.JobSearchServiceI;
-import com.DcoDe.jobconnect.services.interfaces.JobServiceI;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
+import com.dcode.jobconnect.components.FileTypeValidator;
+import com.dcode.jobconnect.dto.DisclosureQuestionDTO;
+import com.dcode.jobconnect.dto.JobApplicationDTO;
+import com.dcode.jobconnect.dto.JobApplicationSubmissionDTO;
+import com.dcode.jobconnect.dto.JobCreateDTO;
+import com.dcode.jobconnect.dto.JobDTO;
+import com.dcode.jobconnect.dto.JobDisclosureQuestionsDTO;
+import com.dcode.jobconnect.dto.JobSearchRequestDTO;
+import com.dcode.jobconnect.dto.JobSearchResponseDTO;
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.enums.JobType;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.services.interfaces.JobSearchServiceI;
+import com.dcode.jobconnect.services.interfaces.JobServiceI;
+import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

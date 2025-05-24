@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.components;
+package com.dcode.jobconnect.components;
 
 import java.util.List;
 

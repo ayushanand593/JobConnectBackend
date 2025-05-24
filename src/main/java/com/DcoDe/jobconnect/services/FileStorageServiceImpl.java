@@ -1,12 +1,12 @@
-package com.DcoDe.jobconnect.services;
-
-import com.DcoDe.jobconnect.entities.FileDocument;
-import com.DcoDe.jobconnect.repositories.FileDocumentRepository;
-import com.DcoDe.jobconnect.services.interfaces.FileStorageServiceI;
+package com.dcode.jobconnect.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.repositories.FileDocumentRepository;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
 import java.io.IOException;
 // import java.util.Optional;

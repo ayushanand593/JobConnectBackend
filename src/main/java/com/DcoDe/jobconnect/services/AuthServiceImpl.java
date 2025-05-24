@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.services;
+package com.dcode.jobconnect.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,20 +10,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.dcode.jobconnect.dto.EmailUpdateDTO;
+import com.dcode.jobconnect.dto.JwtResponseDTO;
+import com.dcode.jobconnect.dto.PasswordUpdateDTO;
+import com.dcode.jobconnect.dto.UserDTO;
+import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
+import com.dcode.jobconnect.repositories.UserRepository;
+import com.dcode.jobconnect.services.interfaces.AuthServiceI;
+import com.dcode.jobconnect.utils.CustomUserDetails;
+import com.dcode.jobconnect.utils.JwtUtils;
+import com.dcode.jobconnect.utils.SecurityUtils;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import com.DcoDe.jobconnect.dto.EmailUpdateDTO;
-import com.DcoDe.jobconnect.dto.JwtResponseDTO;
-import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
-import com.DcoDe.jobconnect.dto.UserDTO;
-import com.DcoDe.jobconnect.entities.User;
-import com.DcoDe.jobconnect.exceptions.TermsNotAcceptedException;
-import com.DcoDe.jobconnect.repositories.UserRepository;
-import com.DcoDe.jobconnect.services.interfaces.AuthServiceI;
-import com.DcoDe.jobconnect.utils.CustomUserDetails;
-import com.DcoDe.jobconnect.utils.JwtUtils;
-import com.DcoDe.jobconnect.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 

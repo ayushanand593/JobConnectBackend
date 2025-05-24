@@ -1,9 +1,9 @@
-package com.DcoDe.jobconnect.utils;
+package com.dcode.jobconnect.utils;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.DcoDe.jobconnect.entities.User;
+import com.dcode.jobconnect.entities.User;
 
 public class SecurityUtils {
 

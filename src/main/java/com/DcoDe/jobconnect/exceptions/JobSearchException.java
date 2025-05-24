@@ -1,4 +1,4 @@
-package com.DcoDe.jobconnect.exceptions;
+package com.dcode.jobconnect.exceptions;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

@@ -1,11 +1,11 @@
-package com.DcoDe.jobconnect.utils;
+package com.dcode.jobconnect.utils;
 
 import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.DcoDe.jobconnect.entities.User;
+import com.dcode.jobconnect.entities.User;
 
 import lombok.Getter;
 

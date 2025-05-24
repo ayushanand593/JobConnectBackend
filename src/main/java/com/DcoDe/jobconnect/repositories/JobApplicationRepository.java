@@ -1,8 +1,4 @@
-package com.DcoDe.jobconnect.repositories;
-import com.DcoDe.jobconnect.entities.Job;
-import com.DcoDe.jobconnect.entities.JobApplication;
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
-
+package com.dcode.jobconnect.repositories;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +11,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.dcode.jobconnect.entities.Job;
+import com.dcode.jobconnect.entities.JobApplication;
+import com.dcode.jobconnect.enums.ApplicationStatus;
 
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {

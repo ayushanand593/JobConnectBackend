@@ -1,9 +1,9 @@
-package com.DcoDe.jobconnect.services.interfaces;
+package com.dcode.jobconnect.services.interfaces;
 
-import com.DcoDe.jobconnect.dto.EmailUpdateDTO;
-import com.DcoDe.jobconnect.dto.JwtResponseDTO;
-import com.DcoDe.jobconnect.dto.PasswordUpdateDTO;
-import com.DcoDe.jobconnect.entities.User;
+import com.dcode.jobconnect.dto.EmailUpdateDTO;
+import com.dcode.jobconnect.dto.JwtResponseDTO;
+import com.dcode.jobconnect.dto.PasswordUpdateDTO;
+import com.dcode.jobconnect.entities.User;
 
 public interface AuthServiceI {
     User login(String email, String password, Boolean termsAccepted);

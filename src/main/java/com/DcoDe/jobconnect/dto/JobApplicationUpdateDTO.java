@@ -1,6 +1,6 @@
-package com.DcoDe.jobconnect.dto;
+package com.dcode.jobconnect.dto;
 
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.enums.ApplicationStatus;
 
 import lombok.Data;
 

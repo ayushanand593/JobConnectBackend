@@ -1,7 +1,6 @@
-package com.DcoDe.jobconnect.entities;
+package com.dcode.jobconnect.entities;
 
 
-import com.DcoDe.jobconnect.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +9,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.dcode.jobconnect.enums.ApplicationStatus;
 
 @Entity
 @Table(name = "job_applications")

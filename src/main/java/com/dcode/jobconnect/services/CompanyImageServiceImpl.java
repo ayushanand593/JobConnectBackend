@@ -71,7 +71,7 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
             
             return fileId;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to process logo image", e);
+            throw new IllegalArgumentException("Failed to process logo image", e);
         }
     }
 
@@ -98,11 +98,11 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
             
             return fileId;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to process banner image", e);
+            throw new IllegalArgumentException("Failed to process banner image", e);
         }
     }
     
-    private String uploadResizedFile(MultipartFile originalFile, byte[] resizedData) throws IOException {
+    private String uploadResizedFile(MultipartFile originalFile, byte[] resizedData){
         // Create a wrapper MultipartFile with the resized data
         MultipartFile resizedFile = new MultipartFile() {
             @Override
@@ -167,10 +167,12 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
         }
     }
     
-    private byte[] resizeImage(byte[] imageData, int maxWidth, int maxHeight, String contentType) throws IOException {
+    private byte[] resizeImage(byte[] imageData, int maxWidth, int maxHeight, String contentType) {
         ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
-        BufferedImage originalImage = ImageIO.read(bis);
-        
+        BufferedImage originalImage;
+        try {
+            originalImage = ImageIO.read(bis);
+                
         // If image is null (could happen with some SVG files), return original data
         if (originalImage == null) {
             return imageData;
@@ -186,7 +188,8 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
         
         // Calculate new dimensions while maintaining aspect ratio
         float aspectRatio = (float) originalWidth / originalHeight;
-        int newWidth, newHeight;
+        int newWidth;
+        int newHeight;
         
         if (originalWidth > originalHeight) {
             newWidth = maxWidth;
@@ -231,5 +234,9 @@ public class CompanyImageServiceImpl implements CompanyImageServiceI {
         
         ImageIO.write(resizedImage, formatName, bos);
         return bos.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to process image: " , e);
+        }
+    
     }
 }

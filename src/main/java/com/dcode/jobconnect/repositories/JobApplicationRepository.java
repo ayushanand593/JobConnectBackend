@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.dcode.jobconnect.entities.Candidate;
 import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.JobApplication;
 import com.dcode.jobconnect.enums.ApplicationStatus;
@@ -36,14 +37,28 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
 Optional<JobApplication> findByJobIdAndCandidateId(Long jobId, Long candidateId);
 
-     void deleteByJob(Job job);
+   // Remove @Transactional from repository methods
+    @Modifying
+    void deleteByJob(Job job);
 
-     @Modifying
+    @Modifying
     @Query("DELETE FROM JobApplication ja WHERE ja.status = :status AND ja.updatedAt < :cutoffDate")
-    int deleteByStatusAndUpdatedAtBefore(ApplicationStatus status, LocalDateTime cutoffDate);
+    int deleteByStatusAndUpdatedAtBefore(@Param("status") ApplicationStatus status, @Param("cutoffDate") LocalDateTime cutoffDate);
+    
+    @Modifying
+    @Query("DELETE FROM JobApplication ja WHERE ja.job = :job")
+    int deleteByJobEntity(@Param("job") Job job);
+
+    @Modifying
+    @Query("DELETE FROM JobApplication ja WHERE ja.job.id = :jobId")
+    int deleteJobApplicationsByJobId(@Param("jobId") Long jobId);
+    
+    @Modifying
+    @Query("DELETE FROM JobApplication ja WHERE ja.candidate = :candidate")
+    int deleteByCandidate(@Param("candidate") Candidate candidate);
     
     // Delete applications by job
     @Modifying
     @Query("DELETE FROM JobApplication ja WHERE ja.job = :job")
-    int NumberOfDeletedJob(Job job);
+    int Number_Of_Deleted_Job(Job job);
 }

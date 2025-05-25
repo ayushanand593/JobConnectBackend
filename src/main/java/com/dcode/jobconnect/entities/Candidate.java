@@ -42,8 +42,6 @@ public class Candidate {
     @Column(name = "experience_years")
     private Integer experienceYears;
 
-    // @Column(name = "resume_url")
-    // private String resumeUrl;
       @Column(name = "resume_file_id")
     private String resumeFileId;
 
@@ -55,8 +53,6 @@ public class Candidate {
     )
     private Set<Skill> skills = new HashSet<>();
 
-    // @OneToMany(mappedBy = "candidate")
-    // private List<JobApplication> applications = new ArrayList<>();
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
 @JsonManagedReference("candidate-savedjobs")  // Add this

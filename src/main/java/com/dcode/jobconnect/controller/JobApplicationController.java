@@ -42,10 +42,6 @@ public class JobApplicationController {
             throw new AccessDeniedException("Not authenticated");
         }
         
-        // Ensure candidate ID in submission matches current user
-        // if (!submissionDTO.getCandidateId().equals(currentUser.getId())) {
-        //     throw new AccessDeniedException("You can only submit applications for your own profile");
-        // }
         
         JobApplicationDTO applicationDTO = jobApplicationService.submitApplication(
                 submissionDTO, resumeFile, coverLetterFile);
@@ -64,19 +60,7 @@ public class JobApplicationController {
         
         // Get the application first to check ownership
         JobApplicationDTO application = jobApplicationService.getJobApplication(id);
-        
-        // Check if current user is the candidate who submitted the application
-        // boolean isCandidate = currentUser.getRole().name().equals("CANDIDATE") && 
-        //                      application.getCandidateId().equals(currentUser.getId());
-        
-        // Check if current user is the employer who owns the job
-        // boolean isEmployer = jobApplicationService.isApplicationForJobPostedByEmployer(id, currentUser.getId());
-        
-        // // Allow access if user is admin, the candidate who applied, or the employer who owns the job
-        // if (!isEmployer) {
-        //     throw new AccessDeniedException("You don't have permission to view this application");
-        // }
-        
+    
         return ResponseEntity.ok(application);
     }
     

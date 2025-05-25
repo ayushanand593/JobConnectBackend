@@ -56,11 +56,10 @@ public class JobController  {
     private final JobSearchServiceI jobSearchService;
 
     private final JobRepository jobRepository;  
-    // @Autowired
-    // private final ApplicationService applicationService;
 
+    private String errMsg = "Job not found with jobId: ";
+  
 
-    
 
     @PostMapping("/create-job")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
@@ -88,7 +87,7 @@ public class JobController  {
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + jobId));
 
         // Check if user has permission to update this job
         if (!job.getPostedBy().getId().equals(currentUser.getId())) {
@@ -109,7 +108,7 @@ public class JobController  {
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + jobId));
 
         // Check if user has permission to update this job
         if (!job.getPostedBy().getId().equals(currentUser.getId())) {
@@ -241,7 +240,7 @@ public ResponseEntity<JobApplicationDTO> applyToJob(
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + jobId));
 
         // Check if user has permission to see disclosures for this job
         if (!job.getPostedBy().getId().equals(currentUser.getId())) {
@@ -266,7 +265,7 @@ public ResponseEntity<JobApplicationDTO> applyToJob(
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + jobId));
 
         // Check if user has permission to update this job
         if (!job.getPostedBy().getId().equals(currentUser.getId())) {

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,6 +23,8 @@ import com.dcode.jobconnect.entities.EmployerProfile;
 import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
+import com.dcode.jobconnect.exceptions.CompanyNotFoundException;
+import com.dcode.jobconnect.exceptions.DuplicateEmailException;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
 import com.dcode.jobconnect.repositories.CompanyRepository;
@@ -57,12 +58,12 @@ public class CompanyServiceImpl implements CompanyServiceI {
     public CompanyDetailDTO registerCompany(CompanyRegistrationDTO dto) {
         // Check if email already exists
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new DuplicateEmailException("Email already registered");
         }
 
         // Check if company unique ID already exists
         if (companyRepository.findByCompanyUniqueId(dto.getCompanyUniqueId()).isPresent()) {
-            throw new RuntimeException("Company ID already exists");
+            throw new CompanyNotFoundException("Company ID already exists");
         }
 
         // Create company
@@ -186,9 +187,6 @@ public void deleteCompanyById(String companyUniqueId) {
         // Option 1: Set company to null if that's acceptable in your business logic
         user.setCompany(null);
         userRepository.save(user);
-        
-        // Option 2: Delete users if they should not exist without a company
-        // userRepository.delete(user);
     }
     
     // Now delete the company
@@ -200,7 +198,7 @@ public void deleteCompanyById(String companyUniqueId) {
     public EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto) {
         // Check if email already exists
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new DuplicateEmailException("Email already registered");
         }
 
         if(!dto.isTermsAccepted()){
@@ -275,7 +273,7 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
     
     return employees.stream()
         .map(this::convertToEmployerProfileDTO)
-        .collect(Collectors.toList());
+        .toList();
 }
 
 
@@ -293,7 +291,6 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
         dto.setLocation(company.getLocation());
 dto.setAboutUs(company.getAboutUs());
 dto.setBenefits(company.getBenefits());
-        // dto.setLogoUrl(company.getLogoUrl());
         dto.setLogoUrl(company.getLogoFileId());
         dto.setBannerUrl(company.getBannerFileId());
         dto.setCreatedAt(company.getCreatedAt());

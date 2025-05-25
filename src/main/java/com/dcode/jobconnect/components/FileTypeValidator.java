@@ -8,6 +8,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 
 public class FileTypeValidator {
+
+  private FileTypeValidator() {}
     
     public static void validateMimeType(MultipartFile file,
                               List<String> allowed,

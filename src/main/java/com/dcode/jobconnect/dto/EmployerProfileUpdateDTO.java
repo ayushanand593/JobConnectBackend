@@ -8,5 +8,4 @@ public class EmployerProfileUpdateDTO {
     private String lastName;
     private String phone;
     private String jobTitle;
-    // private String profilePictureUrl; 
 }

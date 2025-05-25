@@ -31,7 +31,6 @@ import com.dcode.jobconnect.utils.SecurityUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +42,8 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
     private final FileStorageServiceI fileStorageService;
     private final DisclosureAnswerRepository disclosureAnswerRepository;
     private final JobApplicationRepository applicationRepository;
+    private static final String CANDIDATE_NOT_FOUND = "Candidate profile not found";
+    private static final String JOB_NOT_FOUND = "Job application not found";
 
     /**
      * Submit a new job application
@@ -59,14 +60,14 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         }
 
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(CANDIDATE_NOT_FOUND));
 
         Job job = jobRepository.findById(submissionDTO.getJobId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
 
         // Check if already applied
         if (jobApplicationRepository.existsByJobIdAndCandidateId(job.getId(), candidate.getId())) {
-            throw new RuntimeException("You have already applied to this job");
+            throw new IllegalArgumentException("You have already applied to this job");
         }
 
         JobApplication application = new JobApplication();
@@ -88,7 +89,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
             String resumeFileId = fileStorageService.uploadFile(resumeFile);
             application.setResumeFileId(resumeFileId);
         } else {
-            throw new RuntimeException("Resume is required");
+            throw new IllegalArgumentException("Resume is required");
         }
 
         // Handle cover letter
@@ -123,7 +124,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         // Map applications to ApplicationDTO
         return applications.stream()
                 .map(this::mapToJobApplicationDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
     /**
      * Get a specific job application
@@ -135,7 +136,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         }
 
         JobApplication application = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND));
 
         // Security check: only the candidate who applied or employer who posted the job can view
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId()).orElse(null);
@@ -168,7 +169,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         }
 
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(CANDIDATE_NOT_FOUND));
 
         Page<JobApplication> applications = jobApplicationRepository.findByCandidateId(candidate.getId(), pageable);
         return applications.map(this::mapToJobApplicationDTO);
@@ -183,7 +184,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         // only the employer who posted the job can update the status
         
         JobApplication application = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND));
         
         application.setStatus(updateDTO.getStatus());
         application.setUpdatedAt(LocalDateTime.now());
@@ -204,10 +205,10 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
         }
 
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(CANDIDATE_NOT_FOUND));
 
         JobApplication application = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND));
 
         // Check if this application belongs to the current candidate
         if (!application.getCandidate().getId().equals(candidate.getId())) {
@@ -256,7 +257,6 @@ public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) 
         JobApplication application = jobApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Application not found"));
         Job job = application.getJob();
-        System.out.println(job.getPostedBy().getId() + " " + employerId);
         return job.getPostedBy().getId().equals(employerId);
     }
     
@@ -302,7 +302,7 @@ public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) 
                     answerDTO.setAnswerText(answer.getAnswerText());
                     return answerDTO;
                 })
-                .collect(Collectors.toList());
+                .toList();
         dto.setDisclosureAnswers(answerDTOs);
     }
         

@@ -24,7 +24,5 @@ public interface CompanyServiceI {
 
     CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO);
 
-    // void deleteCompany(Company company);
-
      void deleteCompanyById(String companyUniqueId);
 }

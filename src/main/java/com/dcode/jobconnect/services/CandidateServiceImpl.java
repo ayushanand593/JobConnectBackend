@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +19,7 @@ import com.dcode.jobconnect.dto.CandidateRegistrationDTO;
 import com.dcode.jobconnect.dto.SkillDTO;
 import com.dcode.jobconnect.entities.Candidate;
 import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.entities.JobApplication;
 import com.dcode.jobconnect.entities.Skill;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
@@ -27,6 +27,9 @@ import com.dcode.jobconnect.exceptions.DuplicateEmailException;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
 import com.dcode.jobconnect.repositories.CandidateRepository;
+import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
+import com.dcode.jobconnect.repositories.SavedJobRepository;
 import com.dcode.jobconnect.repositories.SkillRepository;
 import com.dcode.jobconnect.repositories.UserRepository;
 import com.dcode.jobconnect.services.interfaces.CandidateServiceI;
@@ -45,6 +48,11 @@ public class CandidateServiceImpl implements CandidateServiceI {
         private final SkillRepository skillRepository;
             private final PasswordEncoder passwordEncoder;
              private final FileStorageServiceI fileStorageService; 
+              private final JobApplicationRepository jobApplicationRepository;
+    private final DisclosureAnswerRepository disclosureAnswerRepository;
+
+    private final SavedJobRepository savedJobRepository;
+             private String errMsg = "Candidate profile not found ";
 
 
     @Override
@@ -106,7 +114,7 @@ public class CandidateServiceImpl implements CandidateServiceI {
         }
 
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg));
 
         return mapToCandidateProfileDTO(candidate);
     }
@@ -127,7 +135,7 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
     }
 
     Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(errMsg));
 
     // Update candidate details
     candidate.setFirstName(profileDTO.getFirstName());
@@ -137,9 +145,7 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
     candidate.setSummary(profileDTO.getSummary());
     candidate.setExperienceYears(profileDTO.getExperienceYears());
 
-    // if (profileDTO.getResumeUrl() != null && !profileDTO.getResumeUrl().isEmpty()) {
-    //     candidate.setResumeUrl(profileDTO.getResumeUrl());
-    // }
+ 
 
     // Update skills if provided
     if (profileDTO.getSkills() != null) {
@@ -153,39 +159,37 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
     return mapToCandidateProfileDTO(candidate);
 }
 
-@Override
+
+    @Override
     @Transactional
     public void deleteCandidateById(Long candidateId) {
-        // 1) Get the logged-in admin
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null || !currentUser.getRole().equals(UserRole.CANDIDATE)) {
             throw new AccessDeniedException("Not authorized");
         }
 
+        if (!currentUser.getId().equals(candidateId)) {
+            throw new AccessDeniedException("You are not authorized to delete this candidate profile");
+        }
 
-            
-         // 3) Check if the candidate ID matches the logged-in user's candidate ID
-    if (!currentUser.getId().equals(candidateId)) {
-        throw new AccessDeniedException("You are not authorized to delete this candidate profile");
-    }
+        User toDelete = userRepository.findById(candidateId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
 
-     // 4) Load the target user
-    User toDelete = userRepository.findById(candidateId)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
+        if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
+            throw new IllegalStateException("You can only delete candidates.");
+        }
 
-       // 5) Ensure they’re actually a CANDIDATE
-    if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
-        throw new IllegalStateException("You can only delete candidates.");
-    }
+        Candidate candidate = candidateRepository.findByUserId(candidateId)
+            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
 
-      // 6) Delete associated candidate profile (if not cascaded)
-    candidateRepository.findByUserId(candidateId)
-        .ifPresent(candidateRepository::delete);
+        // Delete related entities in proper order
+        deleteCandidateRelatedEntities(candidate);
 
-    // 7) (Later) delete any applications, resumes, etc.
+        // Delete the candidate profile
+        candidateRepository.delete(candidate);
 
-    // 8) Finally, delete the User record
-    userRepository.delete(toDelete);
+        // Finally, delete the User record
+        userRepository.delete(toDelete);
     }
 
     @Override
@@ -197,7 +201,7 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
         }
 
         Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg));
 
         // If there's an existing resume, delete it
         if (candidate.getResumeFileId() != null) {
@@ -231,7 +235,6 @@ public User findUserByEmail(String email) {
         dto.setHeadline(candidate.getHeadline());
         dto.setSummary(candidate.getSummary());
         dto.setExperienceYears(candidate.getExperienceYears());
-        // dto.setResumeUrl(candidate.getResumeUrl());
         dto.setCreatedAt(candidate.getUser().getCreatedAt());
 
          if (candidate.getResumeFileId() != null) {
@@ -257,7 +260,7 @@ public User findUserByEmail(String email) {
             dto.setId(skill.getId());
             dto.setName(skill.getName());
             return dto;
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
      private Set<Skill> getOrCreateSkills(List<String> skillNames) {
@@ -282,5 +285,22 @@ public User findUserByEmail(String email) {
 
         return skills;
     }
-
+@Transactional
+    public void deleteCandidateRelatedEntities(Candidate candidate) {
+        // STEP 1: Delete disclosure answers for applications made by this candidate
+        List<JobApplication> applications = jobApplicationRepository.findByCandidateId(candidate.getId());
+        for (JobApplication application : applications) {
+            disclosureAnswerRepository.deleteByJobApplicationId(application.getId());
+        }
+        
+        // STEP 2: Delete job applications
+        jobApplicationRepository.deleteByCandidate(candidate);
+        
+        // STEP 3: Delete saved jobs
+        savedJobRepository.deleteByCandidateId(candidate.getId());
+        
+        // STEP 4: Clear many-to-many relationships (skills)
+        candidate.getSkills().clear();
+        candidateRepository.save(candidate);
+    }
 }

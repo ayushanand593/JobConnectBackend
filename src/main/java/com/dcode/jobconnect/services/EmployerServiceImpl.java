@@ -17,13 +17,16 @@ import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
+import com.dcode.jobconnect.repositories.DisclosureQuestionRepository;
 import com.dcode.jobconnect.repositories.EmployerProfileRepository;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
 import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.SavedJobRepository;
 import com.dcode.jobconnect.repositories.UserRepository;
 import com.dcode.jobconnect.services.interfaces.EmployeeServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
-// import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +38,11 @@ public class EmployerServiceImpl implements EmployeeServiceI {
  private final EmployerProfileRepository employerProfileRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
-    // private final CompanyRepository companyRepository;
+    private final DisclosureQuestionRepository disclosureQuestionRepository;
+    private final DisclosureAnswerRepository disclosureAnswerRepository;
+    private final JobApplicationRepository jobApplicationRepository;
+    private final SavedJobRepository savedJobRepository;
+    private static final String EMPLOYER_NOT_FOUND = "Employer profile not found";
 
     @Override
     public EmployerProfileDTO getEmployerById(Long employerId) {
@@ -45,7 +52,7 @@ public class EmployerServiceImpl implements EmployeeServiceI {
         }
 
         EmployerProfile profile = employerProfileRepository.findByUserId(employerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYER_NOT_FOUND));
 
         
         return mapToEmployerProfileDTO(profile);
@@ -60,7 +67,7 @@ public class EmployerServiceImpl implements EmployeeServiceI {
         }
 
         EmployerProfile profile = employerProfileRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYER_NOT_FOUND));
 
         return mapToEmployerProfileDTO(profile);
     }
@@ -74,14 +81,13 @@ public class EmployerServiceImpl implements EmployeeServiceI {
         }
 
         EmployerProfile profile = employerProfileRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employer profile not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EMPLOYER_NOT_FOUND));
 
         // Update fields
         profile.setFirstName(dto.getFirstName());
         profile.setLastName(dto.getLastName());
         profile.setPhone(dto.getPhone());
         profile.setJobTitle(dto.getJobTitle());
-        // profile.setProfilePictureUrl(dto.getProfilePictureUrl()); 
 
         // Save updated profile
         profile = employerProfileRepository.save(profile);
@@ -89,45 +95,46 @@ public class EmployerServiceImpl implements EmployeeServiceI {
         return mapToEmployerProfileDTO(profile);
     }
 
-    @Override
-@Transactional
-public void deleteEmployerById(Long employerId) {
-    // 1) Get the logged-in admin
+   @Override
+    @Transactional
+    public void deleteEmployerById(Long employerId) {
         User currentAdmin = SecurityUtils.getCurrentUser();
-        if (currentAdmin == null || !currentAdmin.getRole().equals(UserRole.ADMIN) || !currentAdmin.getRole().equals(UserRole.EMPLOYER)) {
+        if (currentAdmin == null || (!currentAdmin.getRole().equals(UserRole.ADMIN) && !currentAdmin.getRole().equals(UserRole.EMPLOYER))) {
             throw new AccessDeniedException("Not authorized");
         }
 
-        // 2) Load the target user
         User toDelete = userRepository.findById(employerId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + employerId));
 
-        // 3) Make sure they’re actually an EMPLOYER (not another ADMIN or CANDIDATE)
         if (!toDelete.getRole().equals(UserRole.EMPLOYER)) {
             throw new IllegalStateException("You can only delete employers.");
         }
 
-        // 4) COMPANY-ID check: only allow if they belong to the same company
-        Long adminCompanyId  = currentAdmin.getCompany().getId();
+        Long adminCompanyId = currentAdmin.getCompany().getId();
         Long targetCompanyId = toDelete.getCompany().getId();
         if (!adminCompanyId.equals(targetCompanyId)) {
             throw new AccessDeniedException("Cannot delete employer outside your company");
         }
 
-        // 5) Delete their profile (if you don’t have a JPA cascade)
+        // Handle jobs posted by this employer FIRST
+        List<Job> jobsPostedByEmployer = jobRepository.findAllByPostedById(employerId);
+        
+        for (Job job : jobsPostedByEmployer) {
+            deleteJobWithRelatedEntities(job);
+        }
+
+        // Delete their profile
         employerProfileRepository.findByUserId(employerId)
             .ifPresent(employerProfileRepository::delete);
 
-        // 6) (Later) delete jobs they created…
-
-        // 7) Finally, delete the User row
+        // Finally, delete the User row
         userRepository.delete(toDelete);
-}
+    }
 
 @Override
     public List<JobDTO> getJobsByEmployerId(Long employerId) {
         List<Job> jobs = jobRepository.findAllByPostedById(employerId);
-        return jobs.stream().map(this::mapToJobDTO).collect(Collectors.toList());
+        return jobs.stream().map(this::mapToJobDTO).toList();
     }
 
 
@@ -200,4 +207,25 @@ public void deleteEmployerById(Long employerId) {
 
     return dto;
 }
+ @Transactional
+    public void deleteJobWithRelatedEntities(Job job) {
+        // STEP 1: Delete disclosure answers first (they reference disclosure questions)
+        disclosureAnswerRepository.deleteByJob(job);
+        
+        // STEP 2: Delete disclosure questions (they reference jobs)
+        disclosureQuestionRepository.deleteByJobEntity(job);
+        
+        // STEP 3: Delete job applications (they reference jobs)
+        jobApplicationRepository.deleteByJobEntity(job);
+        
+        // STEP 4: Delete saved jobs (they reference jobs)
+        savedJobRepository.deleteSavedJobsByJob(job);
+        
+        // STEP 5: Clear many-to-many relationships (skills)
+        job.getSkills().clear();
+        jobRepository.save(job); // Save to persist cleared relationships
+        
+        // STEP 6: Finally delete the job
+        jobRepository.delete(job);
+    }
 }

@@ -3,7 +3,6 @@ package com.dcode.jobconnect.controller;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,22 +51,22 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Employer", description = "API for managing employer profiles and job applications.")
 public class EmployerController {
 
-    @Autowired
+   
      private final CompanyServiceI companyService;
 
-    @Autowired
+    
     private final EmployeeServiceI employerService;
 
-    @Autowired
+    
     private final JobApplicationServiceI applicationService;
 
-    @Autowired
+  
     private final DashboardServiceI dashboardService;
 
-    @Autowired
+   
     private final JobServiceI  jobService;
 
-    @Autowired
+   
      private final AuthServiceI authService;
         
    @PostMapping("/register")
@@ -136,11 +135,6 @@ public class EmployerController {
         if (currentUser == null) {
             throw new AccessDeniedException("Not authenticated");
         }
-
-        // Ensure employer can only update their own profile
-        // if (dto. != null && !dto.getId().equals(currentUser.getId())) {
-        //     throw new AccessDeniedException("You can only update your own profile");
-        // }
 
         EmployerProfileDTO updatedProfile = employerService.updateProfile(dto);
         return ResponseEntity.ok(updatedProfile);

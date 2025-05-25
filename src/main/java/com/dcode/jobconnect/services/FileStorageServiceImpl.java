@@ -9,7 +9,6 @@ import com.dcode.jobconnect.repositories.FileDocumentRepository;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
 import java.io.IOException;
-// import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,7 +39,7 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
             // Return a reference to the file that can be used later
             return fileId;
         } catch (IOException ex) {
-            throw new RuntimeException("Could not store file " + file.getOriginalFilename(), ex);
+            throw new IllegalArgumentException("Could not store file " + file.getOriginalFilename(), ex);
         }
     }
     
@@ -65,19 +64,23 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
         return fileDocument.getData();
     }
     
-    private byte[] compressData(byte[] data) {
-        try {
-            return java.util.zip.GZIPOutputStream.class.isInstance(data) ? data : compress(data);
-        } catch (Exception e) {
-            throw new RuntimeException("Error compressing data", e);
+   private byte[] compressData(byte[] data) {
+    try {
+        // Check if data is already GZIP compressed by checking GZIP magic number
+        if (isAlreadyCompressed(data)) {
+            return data; // Already compressed, return as-is
         }
+        return compress(data); // Not compressed, compress it
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Error compressing data", e);
     }
+}
     
     private byte[] decompressData(byte[] data) {
         try {
             return decompress(data);
         } catch (Exception e) {
-            throw new RuntimeException("Error decompressing data", e);
+            throw new IllegalArgumentException("Error decompressing data", e);
         }
     }
     
@@ -110,4 +113,11 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
         bis.close();
         return decompressed;
     }
+    private boolean isAlreadyCompressed(byte[] data) {
+    // GZIP files start with magic number: 0x1f 0x8b
+    return data != null && 
+           data.length >= 2 && 
+           (data[0] & 0xFF) == 0x1f && 
+           (data[1] & 0xFF) == 0x8b;
+}
 }

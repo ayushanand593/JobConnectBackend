@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,7 @@ import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
 import com.dcode.jobconnect.repositories.DisclosureQuestionRepository;
 import com.dcode.jobconnect.repositories.JobApplicationRepository;
 import com.dcode.jobconnect.repositories.JobRepository;
+import com.dcode.jobconnect.repositories.SavedJobRepository;
 import com.dcode.jobconnect.repositories.SkillRepository;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 import com.dcode.jobconnect.services.interfaces.JobServiceI;
@@ -57,13 +57,16 @@ public class JobServiceImpl implements JobServiceI {
     private final CandidateRepository candidateRepository;
     private final JobApplicationRepository jobApplicationRepository;
 
-    @Autowired
-    private DisclosureQuestionRepository disclosureQuestionRepository;
+    private final DisclosureQuestionRepository disclosureQuestionRepository;
     
-    @Autowired 
-    private DisclosureAnswerRepository disclosureAnswerRepository;
+    private final DisclosureAnswerRepository disclosureAnswerRepository;
 
     private final FileStorageServiceI fileStorageService;
+
+    private final SavedJobRepository savedJobRepository;
+
+
+    private static final String JOB_NOT_FOUND = "Job not found with jobId: ";
 
      @Override
     @Transactional
@@ -128,7 +131,7 @@ public class JobServiceImpl implements JobServiceI {
     @Override
     public JobDTO getJobByJobId(String jobId) {
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
            if (job.getApplicationDeadline() != null) {
             // Convert the deadline to LocalDateTime (end of day)
             LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
@@ -150,7 +153,7 @@ public class JobServiceImpl implements JobServiceI {
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
 
         // Check if user has permission to update this job
         if (!job.getCompany().getId().equals(currentUser.getCompany().getId()) || !job.getPostedBy().getId().equals(currentUser.getId()) ) {
@@ -160,7 +163,7 @@ public class JobServiceImpl implements JobServiceI {
         return updateJobDetails(job, jobDto);
     }
 
-      @Override
+@Override
     @Transactional
     public void deleteJobByJobId(String jobId) {
         User currentUser = SecurityUtils.getCurrentUser();
@@ -169,122 +172,37 @@ public class JobServiceImpl implements JobServiceI {
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found: " + jobId));
 
-        // Check if user has permission to delete this job
-        if (!job.getCompany().getId().equals(currentUser.getCompany().getId()) || !job.getPostedBy().getId().equals(currentUser.getId())) {
+        if (!job.getCompany().getId().equals(currentUser.getCompany().getId()) || 
+            !job.getPostedBy().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("Not authorized to delete this job");
         }
-
-        jobRepository.delete(job);
+        
+        // Use the proper deletion method
+        deleteJobWithRelatedEntities(job);
     }
 
-    @Override
-    @Transactional
-    public JobApplicationDTO applyToJob(String jobId, JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile, MultipartFile coverLetterFile) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
-
-        Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
-
-        Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
-
-        // If the job status is closed, throw an exception
-        if (job.getStatus() == JobStatus.CLOSED) {
-            throw new RuntimeException("This job is closed for applications");
-        }
-         
-// Update the applyToJob method - modify the existing check to exclude withdrawn applications
-        Optional<JobApplication> existingApplication = jobApplicationRepository.findByJobIdAndCandidateId(job.getId(), candidate.getId());
-
-if (existingApplication.isPresent()) {
-    ApplicationStatus status = existingApplication.get().getStatus();
-    if (status == ApplicationStatus.WITHDRAWN) {
-        throw new RuntimeException("You have withdrawn your application for this job and cannot reapply");
-    } else {
-        throw new RuntimeException("You have already applied to this job");
+   @Override
+@Transactional
+public JobApplicationDTO applyToJob(String jobId, JobApplicationSubmissionDTO applicationCreateDTO, 
+                                  MultipartFile resumeFile, MultipartFile coverLetterFile) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authenticated");
     }
+
+    Candidate candidate = findCandidateByUser(currentUser.getId());
+    Job job = findJobById(jobId);
+    
+    validateJobApplication(job, candidate);
+    
+    JobApplication application = createJobApplication(job, candidate, applicationCreateDTO);
+    handleResumeUpload(application, candidate, applicationCreateDTO, resumeFile);
+    handleCoverLetterUpload(application, coverLetterFile);
+    
+    return saveApplicationWithDisclosures(application, job, applicationCreateDTO);
 }
-
-
-          if (job.getApplicationDeadline() != null) {
-            // Convert the deadline to LocalDateTime (end of day)
-            LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
-            LocalDateTime now = LocalDateTime.now();
-            if (now.isAfter(deadline)) {
-                throw new RuntimeException("The application deadline has ended");
-            }
-        }
-
-        JobApplication application = new JobApplication();
-        application.setJob(job);
-        application.setCandidate(candidate);
-        application.setVoluntaryDisclosures(applicationCreateDTO.getVoluntaryDisclosures());
-        application.setCreatedAt(LocalDateTime.now());
-        application.setUpdatedAt(LocalDateTime.now());
-
-        // Handle resume
-        if (applicationCreateDTO.getUseExistingResume() != null && applicationCreateDTO.getUseExistingResume()) {
-            // Use candidate's stored resume
-            if (candidate.getResumeFileId() == null) {
-                throw new ResourceNotFoundException("Candidate does not have a stored resume");
-            }
-            application.setResumeFileId(candidate.getResumeFileId());
-        } else if (resumeFile != null && !resumeFile.isEmpty()) {
-            // Upload new resume
-            String resumeFileId = fileStorageService.uploadFile(resumeFile);
-            application.setResumeFileId(resumeFileId);
-        } else {
-            throw new RuntimeException("Resume is required");
-        }
-
-        // Handle cover letter
-        if (coverLetterFile != null && !coverLetterFile.isEmpty()) {
-            String coverLetterFileId = fileStorageService.uploadFile(coverLetterFile);
-            application.setCoverLetterFileId(coverLetterFileId);
-        }
-        if (applicationCreateDTO.getDisclosureAnswers() != null) {
-        // Validate that all required questions are answered
-        validateDisclosureAnswers(job.getDisclosureQuestions(), applicationCreateDTO.getDisclosureAnswers());
-        
-        // Save application first so we can reference it
-        application = jobApplicationRepository.save(application);
-        
-        // Save answers
-        for (DisclosureAnswerDTO answerDTO : applicationCreateDTO.getDisclosureAnswers()) {
-            DisclosureQuestion question = disclosureQuestionRepository.findById(answerDTO.getQuestionId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Disclosure question not found"));
-            
-            // Verify question belongs to this job
-            if (!question.getJob().getId().equals(job.getId())) {
-                throw new IllegalArgumentException("Question does not belong to this job");
-            }
-            
-            DisclosureAnswer answer = new DisclosureAnswer();
-            answer.setJobApplication(application);
-            answer.setQuestion(question);
-            answer.setAnswerText(answerDTO.getAnswerText());
-            answer.setCreatedAt(LocalDateTime.now());
-            
-            disclosureAnswerRepository.save(answer);
-        }
-    } else {
-        // Check if job has required disclosure questions
-        if (job.getDisclosureQuestions().stream().anyMatch(DisclosureQuestion::getIsRequired)) {
-            throw new IllegalArgumentException("This job requires answers to disclosure questions");
-        }
-        
-        // Save application if no disclosure answers are needed
-        application = jobApplicationRepository.save(application);
-    }
-
-        return mapToJobApplicationDTO(application);
-    }
-
     @Override
     @Transactional
     public void changeJobStatusByJobId(String jobId, JobStatus status) {
@@ -294,7 +212,7 @@ if (existingApplication.isPresent()) {
         }
 
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
 
         // Check if user has permission to update this job
         if (!job.getCompany().getId().equals(currentUser.getCompany().getId())) {
@@ -309,7 +227,7 @@ if (existingApplication.isPresent()) {
     @Override
        public JobDisclosureQuestionsDTO getJobDisclosureQuestions(String jobId) {
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
                 
         JobDisclosureQuestionsDTO dto = new JobDisclosureQuestionsDTO();
         dto.setJobId(job.getJobId());
@@ -334,7 +252,7 @@ public JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestion
     }
     
     Job job = jobRepository.findByJobId(jobId)
-            .orElseThrow(() -> new ResourceNotFoundException("Job not found with jobId: " + jobId));
+            .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
     
     // Verify the job belongs to the current user's company
     if (!job.getCompany().getId().equals(currentUser.getCompany().getId())) {
@@ -350,7 +268,7 @@ public JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestion
             DisclosureQuestion question = new DisclosureQuestion();
             question.setJob(job);
             question.setQuestionText(questionDTO.getQuestionText());
-            question.setIsRequired(questionDTO.getIsRequired() != null ? questionDTO.getIsRequired() : true);
+            question.setIsRequired(Boolean.TRUE.equals(questionDTO.getIsRequired()));
             question.setCreatedAt(LocalDateTime.now());
             question.setUpdatedAt(LocalDateTime.now());
             
@@ -380,7 +298,7 @@ public Job getJobEntityByJobId(String jobId) {
                 DisclosureQuestion question = new DisclosureQuestion();
                 question.setJob(job);
                 question.setQuestionText(questionDTO.getQuestionText());
-                question.setIsRequired(questionDTO.getIsRequired() != null ? questionDTO.getIsRequired() : true);
+                question.setIsRequired(Boolean.TRUE.equals(questionDTO.getIsRequired()));
                 question.setCreatedAt(LocalDateTime.now());
                 question.setUpdatedAt(LocalDateTime.now());
                 
@@ -511,7 +429,7 @@ private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
                     answerDTO.setAnswerText(answer.getAnswerText());
                     return answerDTO;
                 })
-                .collect(Collectors.toList());
+                .toList();
         dto.setDisclosureAnswers(answerDTOs);
     }
 
@@ -548,4 +466,169 @@ private void validateDisclosureAnswers(List<DisclosureQuestion> questions, List<
         }
     }
 }
+private Candidate findCandidateByUser(Long userId) {
+    return candidateRepository.findByUserId(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+}
+
+private Job findJobById(String jobId) {
+    return jobRepository.findByJobId(jobId)
+            .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
+}
+
+private void validateJobApplication(Job job, Candidate candidate) {
+    validateJobStatus(job);
+    validateExistingApplication(job, candidate);
+    validateApplicationDeadline(job);
+}
+
+private void validateJobStatus(Job job) {
+    if (job.getStatus() == JobStatus.CLOSED) {
+        throw new IllegalArgumentException("This job is closed for applications");
+    }
+}
+
+private void validateExistingApplication(Job job, Candidate candidate) {
+    Optional<JobApplication> existingApplication = 
+        jobApplicationRepository.findByJobIdAndCandidateId(job.getId(), candidate.getId());
+    
+    if (existingApplication.isPresent()) {
+        ApplicationStatus status = existingApplication.get().getStatus();
+        String errorMessage = status == ApplicationStatus.WITHDRAWN 
+            ? "You have withdrawn your application for this job and cannot reapply"
+            : "You have already applied to this job";
+        throw new IllegalArgumentException(errorMessage);
+    }
+}
+
+private void validateApplicationDeadline(Job job) {
+    if (job.getApplicationDeadline() == null) {
+        return;
+    }
+    
+    LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
+    LocalDateTime now = LocalDateTime.now();
+    
+    if (now.isAfter(deadline)) {
+        throw new IllegalArgumentException("The application deadline has ended");
+    }
+}
+
+private JobApplication createJobApplication(Job job, Candidate candidate, 
+                                          JobApplicationSubmissionDTO applicationCreateDTO) {
+    JobApplication application = new JobApplication();
+    application.setJob(job);
+    application.setCandidate(candidate);
+    application.setVoluntaryDisclosures(applicationCreateDTO.getVoluntaryDisclosures());
+    application.setCreatedAt(LocalDateTime.now());
+    application.setUpdatedAt(LocalDateTime.now());
+    return application;
+}
+
+private void handleResumeUpload(JobApplication application, Candidate candidate, 
+                               JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile) {
+    boolean useExistingResume = Boolean.TRUE.equals(applicationCreateDTO.getUseExistingResume());
+    
+    if (useExistingResume) {
+        validateAndUseExistingResume(application, candidate);
+    } else if (resumeFile != null && !resumeFile.isEmpty()) {
+        String resumeFileId = fileStorageService.uploadFile(resumeFile);
+        application.setResumeFileId(resumeFileId);
+    } else {
+        throw new IllegalArgumentException("Resume is required");
+    }
+}
+
+private void validateAndUseExistingResume(JobApplication application, Candidate candidate) {
+    if (candidate.getResumeFileId() == null) {
+        throw new ResourceNotFoundException("Candidate does not have a stored resume");
+    }
+    application.setResumeFileId(candidate.getResumeFileId());
+}
+
+private void handleCoverLetterUpload(JobApplication application, MultipartFile coverLetterFile) {
+    if (coverLetterFile != null && !coverLetterFile.isEmpty()) {
+        String coverLetterFileId = fileStorageService.uploadFile(coverLetterFile);
+        application.setCoverLetterFileId(coverLetterFileId);
+    }
+}
+
+private JobApplicationDTO saveApplicationWithDisclosures(JobApplication application, Job job, 
+                                                        JobApplicationSubmissionDTO applicationCreateDTO) {
+    if (applicationCreateDTO.getDisclosureAnswers() != null) {
+        return saveApplicationWithAnswers(application, job, applicationCreateDTO);
+    } else {
+        validateRequiredDisclosures(job);
+        application = jobApplicationRepository.save(application);
+        return mapToJobApplicationDTO(application);
+    }
+}
+
+private JobApplicationDTO saveApplicationWithAnswers(JobApplication application, Job job, 
+                                                    JobApplicationSubmissionDTO applicationCreateDTO) {
+    validateDisclosureAnswers(job.getDisclosureQuestions(), applicationCreateDTO.getDisclosureAnswers());
+    application = jobApplicationRepository.save(application);
+    saveDisclosureAnswers(application, job, applicationCreateDTO.getDisclosureAnswers());
+    return mapToJobApplicationDTO(application);
+}
+
+private void validateRequiredDisclosures(Job job) {
+    boolean hasRequiredQuestions = job.getDisclosureQuestions()
+        .stream()
+        .anyMatch(DisclosureQuestion::getIsRequired);
+        
+    if (hasRequiredQuestions) {
+        throw new IllegalArgumentException("This job requires answers to disclosure questions");
+    }
+}
+
+private void saveDisclosureAnswers(JobApplication application, Job job, 
+                                  List<DisclosureAnswerDTO> disclosureAnswers) {
+    for (DisclosureAnswerDTO answerDTO : disclosureAnswers) {
+        DisclosureQuestion question = findAndValidateQuestion(answerDTO.getQuestionId(), job.getId());
+        saveDisclosureAnswer(application, question, answerDTO);
+    }
+}
+
+private DisclosureQuestion findAndValidateQuestion(Long questionId, Long jobId) {
+    DisclosureQuestion question = disclosureQuestionRepository.findById(questionId)
+            .orElseThrow(() -> new ResourceNotFoundException("Disclosure question not found"));
+    
+    if (!question.getJob().getId().equals(jobId)) {
+        throw new IllegalArgumentException("Question does not belong to this job");
+    }
+    
+    return question;
+}
+
+private void saveDisclosureAnswer(JobApplication application, DisclosureQuestion question, 
+                                 DisclosureAnswerDTO answerDTO) {
+    DisclosureAnswer answer = new DisclosureAnswer();
+    answer.setJobApplication(application);
+    answer.setQuestion(question);
+    answer.setAnswerText(answerDTO.getAnswerText());
+    answer.setCreatedAt(LocalDateTime.now());
+    disclosureAnswerRepository.save(answer);
+}
+@Transactional
+    public void deleteJobWithRelatedEntities(Job job) {
+        // STEP 1: Delete disclosure answers first (they reference disclosure questions)
+        disclosureAnswerRepository.deleteByJob(job);
+        
+        // STEP 2: Delete disclosure questions (they reference jobs)
+        disclosureQuestionRepository.deleteByJobEntity(job);
+        
+        // STEP 3: Delete job applications (they reference jobs)
+        jobApplicationRepository.deleteByJobEntity(job);
+        
+        // STEP 4: Delete saved jobs (they reference jobs)
+        savedJobRepository.deleteSavedJobsByJob(job);
+        
+        // STEP 5: Clear many-to-many relationships (skills)
+        job.getSkills().clear();
+        jobRepository.save(job); // Save to persist cleared relationships
+        
+        // STEP 6: Finally delete the job
+        jobRepository.delete(job);
+    }
 }

@@ -50,23 +50,13 @@ import lombok.RequiredArgsConstructor;
 public class CompanyController {
 
      private final CompanyServiceI companyService;
-    //  private final FileStorageServiceI fileStorageService;
      private final CompanyImageServiceI companyImageService;
 
      private final DashboardServiceI dashboardService;
 
       private final AuthServiceI authService;
 
-    // @PostMapping("/register")
-    // public ResponseEntity<CompanyDetailDTO> registerCompany(@Valid @RequestBody CompanyRegistrationDTO dto) {
-    //     CompanyDetailDTO registeredCompany = companyService.registerCompany(dto);
-    //     return ResponseEntity.status(HttpStatus.CREATED).body(registeredCompany);
-    // }
-
-    // @GetMapping("/{companyUniqueId}")
-    // public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
-    //     return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
-    // }
+      private String errMsg = "Company not found with unique ID: ";
 
   @PostMapping("/register")
 @Operation(summary = "Register a new company")
@@ -88,6 +78,7 @@ public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody Compan
 
     @PutMapping("/profile")
    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+   @Operation(summary = "Update company profile")
     public ResponseEntity<CompanyDetailDTO> updateProfile(
             @Valid @RequestBody CompanyProfileUpdateDTO profileDTO) {
 
@@ -112,7 +103,7 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
     }
 
     Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-            .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+            .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
 
     // Check if the current user is an admin of the company
     if (!company.getAdmins().contains(currentUser)) {
@@ -142,7 +133,7 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
         }
 
         Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
 
         // Check if the current user is an admin of the company
         if (!company.getAdmins().contains(currentUser) ) {
@@ -174,7 +165,7 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
         }
 
         Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+                .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
 
         // Check if the current user is an admin of the company
         if (!company.getAdmins().contains(currentUser) ) {
@@ -199,7 +190,7 @@ public ResponseEntity<List<EmployerProfileDTO>> getCompanyEmployees(
     }
 
     Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-            .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
+            .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
 
     // Check if the current user is an admin of the company
     if (!company.getAdmins().contains(currentUser)) {
@@ -226,21 +217,6 @@ public ResponseEntity<List<EmployerProfileDTO>> getCompanyEmployees(
 
         return ResponseEntity.ok(dashboardService.getCompanyDashboardStats(startDate, endDate));
     }
-    
-    // @GetMapping("/images/{fileId}")
-    // public ResponseEntity<byte[]> getImage(@PathVariable String fileId) {
-    //     try {
-    //         FileDocument fileDocument = fileStorageService.getFile(fileId);
-    //         byte[] imageData = fileStorageService.getFileData(fileId);
-            
-    //         HttpHeaders headers = new HttpHeaders();
-    //         headers.setContentType(MediaType.parseMediaType(fileDocument.getContentType()));
-    //         headers.setContentLength(imageData.length);
-            
-    //         return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
-    //     } catch (RuntimeException e) {
-    //         return ResponseEntity.notFound().build();
-    //     }
-    // }
+   
 
 }

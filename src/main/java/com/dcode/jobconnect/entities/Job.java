@@ -89,7 +89,7 @@ public class Job {
     @EqualsAndHashCode.Exclude
     private Set<Skill> skills = new HashSet<>();
 
- @OneToMany(mappedBy = "job")
+ @OneToMany(mappedBy = "job",cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonIgnore  // Change to @JsonIgnore
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -115,5 +115,14 @@ public class Job {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+    @PreRemove
+private void preRemove() {
+    // Clear many-to-many relationships before deletion
+    this.skills.clear();
+    // Clear other collections to avoid orphan issues
+    this.applications.clear();
+    this.disclosureQuestions.clear();
+    this.savedJobs.clear();
+}
 }
 

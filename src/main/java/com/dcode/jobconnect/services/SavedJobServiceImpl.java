@@ -25,6 +25,8 @@ public class SavedJobServiceImpl implements SavedJobServiceI {
  private final SavedJobRepository savedJobRepository;
     private final CandidateRepository candidateRepository;
     private final JobRepository jobRepository;
+    private static final String CANDIDATE_NOT_FOUND = "Candidate not found";
+    private static final String JOB_NOT_FOUND = "Job not found";
 
     // Constructor with autowired dependencies
 
@@ -32,10 +34,10 @@ public class SavedJobServiceImpl implements SavedJobServiceI {
     @Transactional
     public SavedJob saveJob(Long candidateId, String jobId) {
         Candidate candidate = candidateRepository.findById(candidateId)
-            .orElseThrow(() -> new NoSuchElementException("Candidate not found"));
+            .orElseThrow(() -> new NoSuchElementException(CANDIDATE_NOT_FOUND));
         
         Job job = jobRepository.findByJobId(jobId)
-            .orElseThrow(() -> new NoSuchElementException("Job not found"));
+            .orElseThrow(() -> new NoSuchElementException(JOB_NOT_FOUND));
         
         // Check if already saved
         if (savedJobRepository.existsByCandidateAndJob(candidate, job)) {
@@ -54,10 +56,10 @@ public class SavedJobServiceImpl implements SavedJobServiceI {
     @Transactional
     public void unsaveJob(Long candidateId, String jobId) {
         Candidate candidate = candidateRepository.findById(candidateId)
-            .orElseThrow(() -> new NoSuchElementException("Candidate not found"));
+            .orElseThrow(() -> new NoSuchElementException(CANDIDATE_NOT_FOUND));
         
         Job job = jobRepository.findByJobId(jobId)
-            .orElseThrow(() -> new NoSuchElementException("Job not found"));
+            .orElseThrow(() -> new NoSuchElementException(JOB_NOT_FOUND));
         
         SavedJob savedJob = savedJobRepository.findByCandidateAndJob(candidate, job)
             .orElseThrow(() -> new NoSuchElementException("Saved job not found"));
@@ -76,10 +78,10 @@ public class SavedJobServiceImpl implements SavedJobServiceI {
     @Override
     public boolean isJobSavedByCandidate(Long candidateId, String jobId) {
         Candidate candidate = candidateRepository.findById(candidateId)
-            .orElseThrow(() -> new NoSuchElementException("Candidate not found"));
+            .orElseThrow(() -> new NoSuchElementException(CANDIDATE_NOT_FOUND));
         
         Job job = jobRepository.findByJobId(jobId)
-            .orElseThrow(() -> new NoSuchElementException("Job not found"));
+            .orElseThrow(() -> new NoSuchElementException(JOB_NOT_FOUND));
         
         return savedJobRepository.existsByCandidateAndJob(candidate, job);
     }

@@ -64,15 +64,15 @@ public class CleanupServiceImpl implements CleanupServiceI {
                 // Handle associated entities for each job
                 for (Job job : expiredJobs) {
                     // Delete applications for this job
-                    int appCount = jobApplicationRepository.NumberOfDeletedJob(job);
+                    int appCount = jobApplicationRepository.Number_Of_Deleted_Job(job);
                     log.debug("Deleted {} applications for job {}", appCount, job.getId());
                     
                     // Delete saved jobs
-                    int savedCount = savedJobRepository.NumberOfDeletedJob(job);
+                    int savedCount = savedJobRepository.Number_Of_Deleted_Job(job);
                     log.debug("Deleted {} saved job records for job {}", savedCount, job.getId());
                     
                     // Delete disclosure questions
-                    int questionCount = disclosureQuestionRepository.NumberOfDeletedJob(job);
+                    int questionCount = disclosureQuestionRepository.Number_Of_Deleted_Job(job);
                     log.debug("Deleted {} disclosure questions for job {}", questionCount, job.getId());
                 }
                 

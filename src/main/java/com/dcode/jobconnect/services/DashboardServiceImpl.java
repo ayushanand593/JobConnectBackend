@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,19 +42,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardServiceI {
 
-    @Autowired
+  
     private final JobApplicationRepository applicationRepository;
 
-    @Autowired
     private final JobRepository jobRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-    // private CompanyRepository companyRepository;
-    private final FileStorageServiceI fileStorageService;
+    private final UserRepository userRepository;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final FileStorageServiceI fileStorageService;
+        private static final String dateFormat = "yyyy-MM-dd";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(dateFormat);
     private static final int MAX_ITEMS_IN_LIST = 5;
+    
     
 
      @Override
@@ -76,7 +73,7 @@ public class DashboardServiceImpl implements DashboardServiceI {
     // Get applications within the date range
     List<JobApplication> periodApplications = allApplications.stream()
         .filter(app -> !app.getCreatedAt().isBefore(startDateTime) && !app.getCreatedAt().isAfter(endDateTime))
-        .collect(Collectors.toList());
+        .toList();
 
     return calculateCandidateStats(allApplications, periodApplications);
 }
@@ -93,7 +90,7 @@ public List<JobApplicationDetailDTO> getCandidateApplications() {
     
     return applications.stream()
         .map(this::mapToJobApplicationDetailDTO)
-        .collect(Collectors.toList());
+        .toList();
 }
 
 @Override
@@ -142,7 +139,7 @@ public JobApplicationDetailDTO getCandidateApplicationDetail(Long applicationId)
         // Get applications within the date range
         List<JobApplication> periodApplications = allApplications.stream()
                 .filter(app -> !app.getCreatedAt().isBefore(startDateTime) && !app.getCreatedAt().isAfter(endDateTime))
-                .collect(Collectors.toList());
+                .toList();
 
         return calculateEmployerStats(employerJobs, allApplications, periodApplications);
     }
@@ -163,17 +160,9 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
         ));
     stats.setApplicationsByStatus(statusDistribution);
 
-    // Get recent applications
-    // List<ApplicationSummaryDTO> recentApplications = allApplications.stream()
-    //     .sorted(Comparator.comparing(Application::getCreatedAt).reversed())
-    //     .limit(5)
-    //     .map(this::mapToApplicationSummary)
-    //     .collect(Collectors.toList());
-    // stats.setRecentApplications(recentApplications);
-
     // Calculate application trend
     Map<String, Long> applicationTrend = new LinkedHashMap<>();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
 
     periodApplications.stream()
         .collect(Collectors.groupingBy(
@@ -365,7 +354,7 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
         // Application trend by date
         Map<String, Long> applicationTrend = new LinkedHashMap<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
 
         periodApplications.stream()
                 .collect(Collectors.groupingBy(
@@ -423,7 +412,6 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
 private JobApplicationDetailDTO mapToJobApplicationDetailDTO(JobApplication application) {
     Job job = application.getJob();
-    // Candidate candidate = application.getCandidate();
 
     return JobApplicationDetailDTO.builder()
         .id(application.getId())
@@ -450,7 +438,6 @@ private String getFileNameFromFileId(String fileId) {
         return fileDocument.getFileName();
     } catch (Exception e) {
         // Log the error
-        // log.error("Error getting file name for fileId: {}", fileId, e);
         throw new FileNotFoundException("File not found with ID: " + fileId, e);
     }
 }

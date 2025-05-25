@@ -14,6 +14,4 @@ public interface SavedJobServiceI {
    List<Job> getSavedJobsByCandidate(Long candidateId);
 
    boolean isJobSavedByCandidate(Long candidateId, String jobId);
-
-   // List<Candidate> getCandidatesWhoSavedJob(String jobId);
 }

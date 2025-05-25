@@ -17,10 +17,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
 
-    // @Query("SELECT u FROM User u JOIN u.company c WHERE c.companyUniqueId = :companyUniqueId")
-    // List<User> findByCompanyCompanyUniqueId(@Param("companyUniqueId") String companyUniqueId);
-
-      @Query("SELECT u FROM User u JOIN u.company c WHERE c.companyUniqueId = :companyUniqueId")
+    @Query("SELECT u FROM User u JOIN u.company c WHERE c.companyUniqueId = :companyUniqueId")
     List<User> findByCompanyCompanyUniqueId(@Param("companyUniqueId") String companyUniqueId);
     
     // New method to get users with their employer profiles

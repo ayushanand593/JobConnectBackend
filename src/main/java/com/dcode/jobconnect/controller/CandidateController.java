@@ -30,6 +30,7 @@ import com.dcode.jobconnect.dto.JobApplicationDetailDTO;
 import com.dcode.jobconnect.dto.JwtResponseDTO;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.ApplicationStatus;
+import com.dcode.jobconnect.exceptions.CandidateRegisterException;
 import com.dcode.jobconnect.services.interfaces.AuthServiceI;
 import com.dcode.jobconnect.services.interfaces.CandidateServiceI;
 import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
@@ -63,8 +64,6 @@ public class CandidateController {
     public ResponseEntity<JwtResponseDTO> registerCandidate(
             @Valid @RequestBody CandidateRegistrationDTO dto) {
         
-        System.out.println("Received candidate registration request for: " + dto.getEmail());
-        
         try {
             // Register the candidate
             candidateService.registerCandidate(dto);
@@ -75,8 +74,7 @@ public class CandidateController {
             
             return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
         } catch (Exception e) {
-            System.err.println("Error registering candidate: " + e.getMessage());
-            throw e;
+           throw new CandidateRegisterException("Registration failed: " + e.getMessage());
         }
     }
 
@@ -102,10 +100,8 @@ public class CandidateController {
         }
         
         // If candidate is viewing, ensure they can only view their own profile
-        if (currentUser.getRole().name().equals("CANDIDATE")) {
-            if (!currentUser.getId().equals(id)) {
+        if (currentUser.getRole().name().equals("CANDIDATE") && !currentUser.getId().equals(id)) {
                 throw new AccessDeniedException("You can only view your own profile");
-            }
         }
         return ResponseEntity.ok(candidateService.getCandidateById(id));
     }
@@ -133,10 +129,8 @@ public class CandidateController {
         }
         
         // If candidate is deleting, ensure they can only delete their own profile
-        if (currentUser.getRole().name().equals("CANDIDATE")) {
-            if (!currentUser.getId().equals(id)) {
+        if (currentUser.getRole().name().equals("CANDIDATE") && !currentUser.getId().equals(id)) {
                 throw new AccessDeniedException("You can only delete your own profile");
-            }
         }
         
         candidateService.deleteCandidateById(id);

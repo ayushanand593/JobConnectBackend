@@ -184,9 +184,12 @@ public void deleteCompanyById(String companyUniqueId) {
     
     // 3. Handle employer users - update their company reference or handle as needed
     for (User user : new ArrayList<>(company.getEmployerUsers())) {
-        // Option 1: Set company to null if that's acceptable in your business logic
-        user.setCompany(null);
-        userRepository.save(user);
+
+        
+    employerProfileRepository.findByUserId(user.getId())
+            .ifPresent(employerProfileRepository::delete);
+        // (b) finally delete the User record itself
+        userRepository.delete(user);
     }
     
     // Now delete the company

@@ -2,8 +2,6 @@ package com.dcode.jobconnect.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,18 +12,16 @@ import org.springframework.stereotype.Service;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.repositories.UserRepository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
      
-     @Autowired
-    private UserRepository userRepository;
-    
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
+   
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

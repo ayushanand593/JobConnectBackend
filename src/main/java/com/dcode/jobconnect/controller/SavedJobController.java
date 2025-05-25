@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 public class SavedJobController {
 
     private final SavedJobServiceI savedJobService;
+    private static final String JOB_NOT_FOUND = "Job not found";
 
 
 
@@ -47,7 +48,7 @@ public ResponseEntity<ApiResponse<SavedJobDTO>> saveJob(@PathVariable String job
             .body(new ApiResponse<>(savedJobDTO, null));
     } catch (NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ApiResponse<>(null, "Not found"));
+            .body(new ApiResponse<>(null, JOB_NOT_FOUND));
     } catch (IllegalStateException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
             .body(new ApiResponse<>(null, e.getMessage()));
@@ -84,7 +85,7 @@ private SavedJobDTO convertToDTO(SavedJob savedJob) {
         return ResponseEntity.noContent().build();
     } catch (NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(null, "Not found"));
+                .body(new ApiResponse<>(null, JOB_NOT_FOUND));
     } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(null, "Error removing saved job: " + e.getMessage()));
@@ -138,7 +139,7 @@ public ResponseEntity<ApiResponse<List<JobDTO>>> getSavedJobs() {
         return ResponseEntity.ok(new ApiResponse<>(isSaved, null));
     } catch (NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(null, "Not found"));
+                .body(new ApiResponse<>(null, JOB_NOT_FOUND));
     } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(null, "Error checking saved status: " + e.getMessage()));

@@ -56,8 +56,8 @@ public class JwtUtils {
         Map<String, Object> claims = new HashMap<>();
         
         // Add custom claims 
-        if (userDetails instanceof CustomUserDetails) {
-            User user = ((CustomUserDetails) userDetails).getUser();
+        if (userDetails instanceof CustomUserDetails customUserDetails) {
+            User user = customUserDetails.getUser();
             claims.put("userId", user.getId());
             claims.put("role", user.getRole().name());
         }

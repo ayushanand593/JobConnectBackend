@@ -11,12 +11,15 @@ import lombok.Getter;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
-
-     private final User user;
+    private transient final User user; // Transient, optional
+    private final String username;    // Store email separately
+    private final String password;    // Store password separately
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user, Collection<? extends GrantedAuthority> authorities) {
         this.user = user;
+        this.username = user.getEmail();
+        this.password = user.getPassword();
         this.authorities = authorities;
     }
 
@@ -27,12 +30,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password; // Use stored field instead of user
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return username; // Use stored field instead of user
     }
 
     @Override

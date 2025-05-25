@@ -50,8 +50,8 @@ public class DashboardServiceImpl implements DashboardServiceI {
     private final UserRepository userRepository;
 
     private final FileStorageServiceI fileStorageService;
-        private static final String dateFormat = "yyyy-MM-dd";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(dateFormat);
+        private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final int MAX_ITEMS_IN_LIST = 5;
     
     
@@ -162,7 +162,7 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
     // Calculate application trend
     Map<String, Long> applicationTrend = new LinkedHashMap<>();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
     periodApplications.stream()
         .collect(Collectors.groupingBy(
@@ -354,7 +354,7 @@ private CandidateDashboardStatsDTO calculateCandidateStats(List<JobApplication> 
 
         // Application trend by date
         Map<String, Long> applicationTrend = new LinkedHashMap<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
         periodApplications.stream()
                 .collect(Collectors.groupingBy(

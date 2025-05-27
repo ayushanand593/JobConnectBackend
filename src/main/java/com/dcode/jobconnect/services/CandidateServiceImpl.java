@@ -19,7 +19,6 @@ import com.dcode.jobconnect.dto.CandidateRegistrationDTO;
 import com.dcode.jobconnect.dto.SkillDTO;
 import com.dcode.jobconnect.entities.Candidate;
 import com.dcode.jobconnect.entities.FileDocument;
-import com.dcode.jobconnect.entities.JobApplication;
 import com.dcode.jobconnect.entities.Skill;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
@@ -160,37 +159,37 @@ public CandidateProfileDTO updateCandidateProfile(CandidateProfileUpdateDTO prof
 }
 
 
-    @Override
-    @Transactional
-    public void deleteCandidateById(Long candidateId) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null || !currentUser.getRole().equals(UserRole.CANDIDATE)) {
-            throw new AccessDeniedException("Not authorized");
-        }
-
-        if (!currentUser.getId().equals(candidateId)) {
-            throw new AccessDeniedException("You are not authorized to delete this candidate profile");
-        }
-
-        User toDelete = userRepository.findById(candidateId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
-
-        if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
-            throw new IllegalStateException("You can only delete candidates.");
-        }
-
-        Candidate candidate = candidateRepository.findByUserId(candidateId)
-            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
-
-        // Delete related entities in proper order
-        deleteCandidateRelatedEntities(candidate);
-
-        // Delete the candidate profile
-        candidateRepository.delete(candidate);
-
-        // Finally, delete the User record
-        userRepository.delete(toDelete);
+   @Override
+@Transactional
+public void deleteCandidateById(Long candidateId) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null || !currentUser.getRole().equals(UserRole.CANDIDATE)) {
+        throw new AccessDeniedException("Not authorized");
     }
+
+    if (!currentUser.getId().equals(candidateId)) {
+        throw new AccessDeniedException("You are not authorized to delete this candidate profile");
+    }
+
+    User toDelete = userRepository.findById(candidateId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + candidateId));
+
+    if (!toDelete.getRole().equals(UserRole.CANDIDATE)) {
+        throw new IllegalStateException("You can only delete candidates.");
+    }
+
+    Candidate candidate = candidateRepository.findByUserId(candidateId)
+        .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+
+    // Delete related entities using bulk operations
+    deleteCandidateRelatedEntitiesBulk(candidate.getId());
+
+    // Delete the candidate profile
+    candidateRepository.deleteById(candidate.getId());
+
+    // Finally, delete the User record
+    userRepository.deleteById(candidateId);
+}
 
     @Override
     @Transactional
@@ -286,21 +285,22 @@ public User findUserByEmail(String email) {
         return skills;
     }
 @Transactional
-    public void deleteCandidateRelatedEntities(Candidate candidate) {
-        // STEP 1: Delete disclosure answers for applications made by this candidate
-        List<JobApplication> applications = jobApplicationRepository.findByCandidateId(candidate.getId());
-        for (JobApplication application : applications) {
-            disclosureAnswerRepository.deleteByJobApplicationId(application.getId());
-        }
-        
-        // STEP 2: Delete job applications
-        jobApplicationRepository.deleteByCandidate(candidate);
-        
-        // STEP 3: Delete saved jobs
-        savedJobRepository.deleteByCandidateId(candidate.getId());
-        
-        // STEP 4: Clear many-to-many relationships (skills)
-        candidate.getSkills().clear();
-        candidateRepository.save(candidate);
+public void deleteCandidateRelatedEntitiesBulk(Long candidateId) {
+    // STEP 1: Get all job applications for this candidate
+    List<Long> applicationIds = jobApplicationRepository.findApplicationIdsByCandidateId(candidateId);
+    
+    // STEP 2: Delete disclosure answers in batches
+    if (!applicationIds.isEmpty()) {
+        disclosureAnswerRepository.deleteByJobApplicationIds(applicationIds);
     }
+    
+    // STEP 3: Delete job applications by candidate ID
+    jobApplicationRepository.deleteByCandidateId(candidateId);
+    
+    // STEP 4: Delete saved jobs by candidate ID
+    savedJobRepository.deleteByCandidateId(candidateId);
+    
+    // STEP 5: Clear many-to-many relationships using native query
+    candidateRepository.deleteCandidateSkillsByCandidateId(candidateId);
+}
 }

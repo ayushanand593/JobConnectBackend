@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.Job;
-import com.dcode.jobconnect.enums.JobStatus;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long> {
@@ -28,14 +29,17 @@ public interface JobRepository extends JpaRepository<Job, Long> {
       boolean existsByJobId(String jobId);
     
     List<Job> findByCompanyId(Long companyId);
-    
-    List<Job> findByStatus(JobStatus status);
-    
-    @Query("SELECT j FROM Job j WHERE j.company.id = ?1 AND j.status = ?2")
-    List<Job> findByCompanyIdAndStatus(Long companyId, JobStatus status);
-    
-    @Query("SELECT j FROM Job j WHERE j.postedBy.id = ?1")
-    List<Job> findByPostedBy(Long userId);
+
 
     List<Job> findByApplicationDeadlineBefore(LocalDateTime cutoffDate);
+
+
+@Modifying
+@Query("DELETE FROM Job j WHERE j.company.id = :companyId")
+void deleteByCompanyId(@Param("companyId") Long companyId);
+
+@Modifying
+@Query(value = "DELETE FROM job_skills WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId)", nativeQuery = true)
+void clearJobSkillsByCompanyId(@Param("companyId") Long companyId);
+
 }

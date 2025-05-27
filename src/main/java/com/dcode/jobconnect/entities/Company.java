@@ -53,13 +53,13 @@ public class Company {
 
 
 //    @EqualsAndHashCode.Exclude
-@OneToMany(mappedBy = "company",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+@OneToMany(mappedBy = "company",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore  // Add this to prevent recursion
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Job> jobs= new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @JoinTable(
             name = "company_admins",
             joinColumns = @JoinColumn(name = "company_id"),

@@ -27,4 +27,12 @@ public interface DisclosureAnswerRepository extends JpaRepository<DisclosureAnsw
     @Modifying
     @Query("DELETE FROM DisclosureAnswer da WHERE da.jobApplication.id = :applicationId")
     int deleteByJobApplicationId(@Param("applicationId") Long applicationId);
+
+    @Modifying
+@Query("DELETE FROM DisclosureAnswer da WHERE da.jobApplication.id IN :applicationIds")
+void deleteByJobApplicationIds(@Param("applicationIds") List<Long> applicationIds);
+
+@Modifying
+@Query(value = "DELETE FROM disclosure_answers WHERE application_id IN (SELECT id FROM job_applications WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId))", nativeQuery = true)
+void deleteByCompanyId(@Param("companyId") Long companyId);
 }

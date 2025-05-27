@@ -10,7 +10,6 @@ import com.dcode.jobconnect.entities.Candidate;
 import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.SavedJob;
 
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,10 +24,7 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     Optional<SavedJob> findByCandidateAndJob(Candidate candidate, Job job);
     
     boolean existsByCandidateAndJob(Candidate candidate, Job job);
-    
-  @Modifying
-    @Query("DELETE FROM SavedJob sj WHERE sj.candidate.id = ?1 AND sj.job.jobId = ?2")
-    void deleteByCandidateIdAndJobId(Long candidateId, String jobId);
+
     
     @Modifying
     @Query("DELETE FROM SavedJob sj WHERE sj.job.jobId = ?1")
@@ -45,16 +41,17 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     @Query("DELETE FROM SavedJob sj WHERE sj.job = :job")
     int deleteSavedJobsByJob(@Param("job") Job job);
 
+
     @Modifying
-    @Query("DELETE FROM SavedJob sj WHERE sj.job.id = :jobId")
-    int deleteSavedJobsByJobId(@Param("jobId") Long jobId);
+@Query("DELETE FROM SavedJob sj WHERE sj.job.id IN :jobIds")
+void deleteByJobIds(@Param("jobIds") List<Long> jobIds);
+
+@Modifying  
+@Query(value = "DELETE FROM saved_jobs WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId)", nativeQuery = true)
+void deleteByCompanyId(@Param("companyId") Long companyId);
 
       @Modifying
     @Query("DELETE FROM SavedJob sj WHERE sj.job = :job")
     int Number_Of_Deleted_Job(Job job);
 
-       @Modifying
-    @Transactional
-    @Query("DELETE FROM SavedJob sj WHERE sj.job.id = :jobId")
-    int deleteBySavedJobIdJobId(@Param("jobId") Long jobId);
 }

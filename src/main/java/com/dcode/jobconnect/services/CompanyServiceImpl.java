@@ -1,7 +1,6 @@
 package com.dcode.jobconnect.services;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +19,6 @@ import com.dcode.jobconnect.dto.EmployeeRegistrationDTO;
 import com.dcode.jobconnect.dto.EmployerProfileDTO;
 import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.EmployerProfile;
-import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
 import com.dcode.jobconnect.exceptions.CompanyNotFoundException;
@@ -28,6 +26,7 @@ import com.dcode.jobconnect.exceptions.DuplicateEmailException;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.exceptions.TermsNotAcceptedException;
 import com.dcode.jobconnect.repositories.CompanyRepository;
+import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
 import com.dcode.jobconnect.repositories.DisclosureQuestionRepository;
 import com.dcode.jobconnect.repositories.EmployerProfileRepository;
 import com.dcode.jobconnect.repositories.JobApplicationRepository;
@@ -37,6 +36,8 @@ import com.dcode.jobconnect.repositories.UserRepository;
 import com.dcode.jobconnect.services.interfaces.CompanyServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -50,8 +51,12 @@ public class CompanyServiceImpl implements CompanyServiceI {
     private final JobApplicationRepository jobApplicationRepository;
     private final SavedJobRepository savedJobRepository;
     private final DisclosureQuestionRepository disclosureQuestionRepository;
+    private final DisclosureAnswerRepository disclosureAnswerRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmployerProfileRepository employerProfileRepository;
+
+    @PersistenceContext
+    private final EntityManager em;
 
     @Override
     @Transactional
@@ -148,52 +153,22 @@ company.setBenefits(profileDTO.getBenefits());
 @Override
 @Transactional
 public void deleteCompanyById(String companyUniqueId) {
-    // Check if user is admin
     User currentUser = SecurityUtils.getCurrentUser();
     if (currentUser == null || !isCompanyAdmin(currentUser)) {
         throw new AccessDeniedException("Only company admins can delete the company");
     }
 
-    Company company = findByCompanyUniqueId(companyUniqueId)
+    // Get company ID without loading the full entity
+    Company company = companyRepository.findByCompanyUniqueId(companyUniqueId)
             .orElseThrow(() -> new ResourceNotFoundException("Company not found with unique ID: " + companyUniqueId));
     
-    // Check if the current user is an admin of this specific company
-    if (!company.getAdmins().contains(currentUser)) {
+    // Verify admin access using bulk query
+    if (!companyRepository.isUserAdminOfCompany(currentUser.getId(), company.getId())) {
         throw new AccessDeniedException("Not authorized to delete this company");
     }
     
-    // Manually handle relationships to avoid cascade issues
-    
-    // 1. Clear the admin relationships first
-    company.getAdmins().clear();
-    
-    // 2. Handle jobs - either delete them or update their company reference
-    for (Job job : new ArrayList<>(company.getJobs())) {
-        // Delete job applications first
-        jobApplicationRepository.deleteByJob(job);
-        
-        // Delete saved jobs
-        savedJobRepository.deleteByJob(job);
-        
-        // Handle disclosure questions
-        disclosureQuestionRepository.deleteByJob(job);
-        
-        // Finally delete the job
-        jobRepository.delete(job);
-    }
-    
-    // 3. Handle employer users - update their company reference or handle as needed
-    for (User user : new ArrayList<>(company.getEmployerUsers())) {
-
-        
-    employerProfileRepository.findByUserId(user.getId())
-            .ifPresent(employerProfileRepository::delete);
-        // (b) finally delete the User record itself
-        userRepository.delete(user);
-    }
-    
-    // Now delete the company
-    companyRepository.delete(company);
+    // Delete everything using bulk operations - no entity loading
+    deleteCompanyDataBulk(company.getId());
 }
 
     @Override
@@ -323,5 +298,46 @@ dto.setBenefits(company.getBenefits());
     }
     
     return dto;
+}
+@Transactional
+private void deleteCompanyDataBulk(Long companyId) {
+    // Clear user-company associations first
+    userRepository.clearCompanyFromCandidates(companyId);
+    userRepository.clearCompanyFromAdmins(companyId);
+    
+    // Delete in correct order - most dependent first
+    // 1. Delete disclosure answers (references disclosure_questions)
+    disclosureAnswerRepository.deleteByCompanyId(companyId);
+    
+    // 2. Delete job applications (references jobs)
+    jobApplicationRepository.deleteByCompanyId(companyId);
+    
+    // 3. Delete saved jobs (references jobs)
+    savedJobRepository.deleteByCompanyId(companyId);
+    
+    // 4. Clear job skills associations (many-to-many table)
+    jobRepository.clearJobSkillsByCompanyId(companyId);
+    
+    // 5. Delete disclosure questions (references jobs) - BEFORE deleting jobs
+    disclosureQuestionRepository.deleteByCompanyId(companyId);
+    
+    // 6. Now safe to delete jobs
+    jobRepository.deleteByCompanyId(companyId);
+    
+    // 7. Delete employer profiles
+    employerProfileRepository.deleteByCompanyId(companyId);
+    
+    // 8. Delete employer users
+    userRepository.deleteEmployersByCompanyId(companyId);
+    userRepository.deleteAllByCompanyId(companyId);
+    
+    // 9. Clear company admins (many-to-many table)
+    companyRepository.clearCompanyAdmins(companyId);
+    
+    // 10. Finally delete the company
+    companyRepository.deleteById(companyId);
+    
+    em.flush();
+    em.clear();
 }
 }

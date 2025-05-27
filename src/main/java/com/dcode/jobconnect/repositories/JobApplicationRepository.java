@@ -49,13 +49,26 @@ Optional<JobApplication> findByJobIdAndCandidateId(Long jobId, Long candidateId)
     @Query("DELETE FROM JobApplication ja WHERE ja.job = :job")
     int deleteByJobEntity(@Param("job") Job job);
 
-    @Modifying
-    @Query("DELETE FROM JobApplication ja WHERE ja.job.id = :jobId")
-    int deleteJobApplicationsByJobId(@Param("jobId") Long jobId);
     
     @Modifying
     @Query("DELETE FROM JobApplication ja WHERE ja.candidate = :candidate")
     int deleteByCandidate(@Param("candidate") Candidate candidate);
+
+    @Query("SELECT ja.id FROM JobApplication ja WHERE ja.candidate.id = :candidateId")
+List<Long> findApplicationIdsByCandidateId(@Param("candidateId") Long candidateId);
+
+@Modifying
+@Query("DELETE FROM JobApplication ja WHERE ja.candidate.id = :candidateId")
+void deleteByCandidateId(@Param("candidateId") Long candidateId);
+
+
+@Modifying
+@Query("DELETE FROM JobApplication ja WHERE ja.job.id IN :jobIds")
+void deleteByJobIds(@Param("jobIds") List<Long> jobIds);
+
+@Modifying
+@Query(value = "DELETE FROM job_applications WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId)", nativeQuery = true)
+void deleteByCompanyId(@Param("companyId") Long companyId);
     
     // Delete applications by job
     @Modifying

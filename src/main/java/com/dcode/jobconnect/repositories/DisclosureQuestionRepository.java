@@ -15,21 +15,20 @@ import com.dcode.jobconnect.entities.Job;
 public interface DisclosureQuestionRepository extends JpaRepository<DisclosureQuestion, Long> {
     List<DisclosureQuestion> findAllByJobId(Long jobId);
 
-     @Modifying
-    @Query("DELETE FROM DisclosureAnswer da WHERE da.question.job.id = :jobId")
-    int deleteDisclosureAnswersByJobId(@Param("jobId") Long jobId);
-
-    @Modifying
-    @Query("DELETE FROM DisclosureQuestion dq WHERE dq.job.id = :jobId")
-    int deleteDisclosureQuestionsByJobId(@Param("jobId") Long jobId);
-    
-    // Remove @Transactional from repository methods
     @Modifying
     void deleteByJob(Job job);
 
     @Modifying
     @Query("DELETE FROM DisclosureQuestion dq WHERE dq.job = :job")
     int deleteByJobEntity(@Param("job") Job job);
+
+    @Modifying
+@Query(value = "DELETE FROM disclosure_questions WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId)", nativeQuery = true) 
+void deleteByCompanyId(@Param("companyId") Long companyId);
+
+    @Modifying
+@Query("DELETE FROM DisclosureQuestion dq WHERE dq.job.id IN :jobIds")
+void deleteByJobIds(@Param("jobIds") List<Long> jobIds);
 
       @Modifying
     @Query("DELETE FROM DisclosureQuestion dq WHERE dq.job = :job")

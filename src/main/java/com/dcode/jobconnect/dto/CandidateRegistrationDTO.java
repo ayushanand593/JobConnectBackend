@@ -19,10 +19,7 @@ public class CandidateRegistrationDTO {
 
     @NotBlank(message = "First name is required")
     private String firstName;
-
-   
     private String lastName;
-
     private String phone;
     private String headline;
     private String summary;

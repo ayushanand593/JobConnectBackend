@@ -9,6 +9,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,6 +146,18 @@ public class JobServiceImpl implements JobServiceI {
         }
         return mapToJobDTO(job);
     }
+
+@Override
+@Transactional(readOnly = true)
+public Page<JobDTO> getAllJobs(Pageable pageable) {
+    Page<Job> jobPage = jobRepository.findAll(pageable);
+    
+    List<JobDTO> jobDTOs = jobPage.getContent().stream()
+            .map(this::mapToJobDTO)
+            .toList();
+    
+    return new PageImpl<>(jobDTOs, pageable, jobPage.getTotalElements());
+}
 
     @Override
     @Transactional

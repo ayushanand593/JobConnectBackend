@@ -31,6 +31,8 @@ public class Company {
     private String industry;
     private String size;
     private String website;
+
+    @Column(name = "description", columnDefinition = "MEDIUMTEXT")
     private String description;
 
     @Column(name = "logo_url")

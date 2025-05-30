@@ -51,6 +51,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/jobs/jobId/{jobId}").permitAll()
                     .requestMatchers("/api/jobs/search").permitAll()
+                    .requestMatchers("/api/jobs/jobs").permitAll()
                     .requestMatchers("/api/companies/**").permitAll()
                     .requestMatchers("/api/employer/register").permitAll()
                     .requestMatchers("/api/candidate/register").permitAll()

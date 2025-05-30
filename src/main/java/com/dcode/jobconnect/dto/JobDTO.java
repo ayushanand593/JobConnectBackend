@@ -2,6 +2,7 @@ package com.dcode.jobconnect.dto;
 
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

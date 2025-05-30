@@ -2,6 +2,9 @@ package com.dcode.jobconnect.controller;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +71,17 @@ public class JobController  {
         JobDTO createdJob = jobService.createJob(jobDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJob);
     }
+
+@GetMapping("/jobs")
+public ResponseEntity<Page<JobDTO>> getAllJobs(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+            
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<JobDTO> jobs = jobService.getAllJobs(pageable);
+    return ResponseEntity.ok(jobs);
+}
+
 
      @GetMapping("/jobId/{jobId}")
      @Operation(summary = "Get job details by job ID")

@@ -2,6 +2,8 @@ package com.dcode.jobconnect.services.interfaces;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dcode.jobconnect.dto.DisclosureQuestionDTO;
@@ -32,4 +34,6 @@ public interface JobServiceI {
     JobDTO updateJobDisclosureQuestions(String jobId, List<DisclosureQuestionDTO> questions);
 
     public Job getJobEntityByJobId(String jobId);
+
+    Page<JobDTO> getAllJobs(Pageable pageable);
 }

@@ -83,11 +83,11 @@ public ResponseEntity<Page<JobDTO>> getAllJobs(
 }
 
 
-     @GetMapping("/jobId/{jobId}")
-     @Operation(summary = "Get job details by job ID")
-    public ResponseEntity<JobDTO> getJobByJobId(@PathVariable String jobId) {
-        return ResponseEntity.ok(jobService.getJobByJobId(jobId));
-    }
+        @GetMapping("/jobId/{jobId}")
+        @Operation(summary = "Get job details by job ID")
+        public ResponseEntity<JobDTO> getJobByJobId(@PathVariable String jobId) {
+            return ResponseEntity.ok(jobService.getJobByJobId(jobId));
+        }
 
        @PutMapping("/jobId/{jobId}")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")

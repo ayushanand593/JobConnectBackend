@@ -2,8 +2,11 @@ package com.dcode.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +31,15 @@ import com.dcode.jobconnect.dto.EmployerProfileDTO;
 import com.dcode.jobconnect.dto.ImageUploadResponseDTO;
 import com.dcode.jobconnect.dto.JwtResponseDTO;
 import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.FileDocument;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.services.FileStorageServiceImpl;
 import com.dcode.jobconnect.services.interfaces.AuthServiceI;
 import com.dcode.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.dcode.jobconnect.services.interfaces.CompanyServiceI;
 import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,15 +48,18 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
 @Tag(name="Company", description = "API for managing company profiles and images.")
+@Slf4j
 public class CompanyController {
 
      private final CompanyServiceI companyService;
      private final CompanyImageServiceI companyImageService;
+     private final FileStorageServiceI fileStorageService;
 
      private final DashboardServiceI dashboardService;
 
@@ -115,68 +124,77 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
     return ResponseEntity.ok("Company deleted successfully");
 }
 
-     @PostMapping(value="/{companyUniqueId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
+     @PostMapping("/{companyId}/logo")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Upload company logo")
-    public ResponseEntity<ImageUploadResponseDTO> uploadCompanyLogo(
-            @PathVariable String companyUniqueId,
-             @Parameter(
-            description = "Resume file to upload", 
-            required = true,
-            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-        )
+    public ResponseEntity<Map<String, String>> uploadCompanyLogo(
+            @PathVariable Long companyId,
             @RequestParam("file") MultipartFile file) {
 
-         User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authorized");
-        }
+                 User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authorized");
+    }
 
-        Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-                .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
+// Optional<Company> company = companyService.findById(companyId);
+    // Retrieve the company and check if current user is an admin of it
+   Company company = companyService.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
 
-        // Check if the current user is an admin of the company
-        if (!company.getAdmins().contains(currentUser) ) {
-            throw new AccessDeniedException("Not authorized to upload banner for this company");
-        }
-    
-            
-        String fileId = companyImageService.uploadCompanyLogo(companyUniqueId, file);
+    if (!company.getAdmins().contains(currentUser)) {
+        throw new AccessDeniedException("Not authorized to update logo for this company");
+    }
         
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ImageUploadResponseDTO(fileId, "Logo uploaded successfully"));
+        try {
+            // Validate file type
+            if (!isImageFile(file)) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Only image files are allowed"));
+            }
+            
+            // Save the logo
+            String fileId = ((FileStorageServiceImpl) fileStorageService).saveCompanyLogo(companyId, file);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Logo uploaded successfully",
+                "fileId", fileId,
+                "companyId", companyId.toString()
+            ));
+            
+        } catch (Exception e) {
+            log.error("Error uploading logo for company {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to upload logo: " + e.getMessage()));
+        }
     }
     
-    @PostMapping(value="/{companyUniqueId}/banner",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")
-    @Operation(summary = "Upload company banner")
-    public ResponseEntity<ImageUploadResponseDTO> uploadCompanyBanner(
-            @PathVariable String companyUniqueId,
-              @Parameter(
-            description = "Resume file to upload", 
-            required = true,
-            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-        )
-            @RequestParam("file") MultipartFile file) {
-
-          User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authorized");
-        }
-
-        Company company = companyService.findByCompanyUniqueId(companyUniqueId)
-                .orElseThrow(() -> new ResourceNotFoundException(errMsg + companyUniqueId));
-
-        // Check if the current user is an admin of the company
-        if (!company.getAdmins().contains(currentUser) ) {
-            throw new AccessDeniedException("Not authorized to upload banner for this company");
-        }
+    @GetMapping("/{companyId}/logo")
+    @Operation(summary = "Get company logo")
+    public ResponseEntity<?> getCompanyLogo(@PathVariable Long companyId) {
+        try {
+            Optional<FileDocument> logoDoc = fileStorageService.getCompanyLogo(companyId);
             
-        String fileId = companyImageService.uploadCompanyBanner(companyUniqueId, file);
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ImageUploadResponseDTO(fileId, "Banner uploaded successfully"));
+            if (logoDoc.isPresent()) {
+                FileDocument doc = logoDoc.get();
+                return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(doc.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + doc.getFileName() + "\"")
+                    .body(doc.getData());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving logo for company {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to retrieve logo"));
+        }
     }
+    
+    private boolean isImageFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && contentType.startsWith("image/");
+    }
+    
     
   @GetMapping("/{companyUniqueId}/employees")
 @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ADMIN')")

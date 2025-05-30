@@ -1,21 +1,38 @@
 package com.dcode.jobconnect.services;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.dcode.jobconnect.entities.Company;
+import com.dcode.jobconnect.entities.CompanyFile;
 import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.enums.FileType;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.CompanyFileRepository;
+import com.dcode.jobconnect.repositories.CompanyRepository;
 import com.dcode.jobconnect.repositories.FileDocumentRepository;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
+import jakarta.transaction.Transactional;
+
 import java.io.IOException;
+import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FileStorageServiceImpl implements FileStorageServiceI {
 
     private final FileDocumentRepository fileDocumentRepository;
+    private final CompanyFileRepository companyFileRepository;
+    private final CompanyRepository companyRepository;
 
     @Override
     public String uploadFile(MultipartFile file) {
@@ -63,6 +80,65 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
         
         return fileDocument.getData();
     }
+
+     public Optional<FileDocument> getCompanyLogo(Long companyId) {
+        try {
+            Optional<CompanyFile> companyFileOpt = companyFileRepository.findLogoByCompanyId(companyId);
+            if (companyFileOpt.isPresent()) {
+                String fileId = companyFileOpt.get().getFileId();
+                return fileDocumentRepository.findByFileId(fileId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to find logo for company {} using mapping table: {}", companyId, e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    //  public Optional<FileDocument> getCompanyLogo(Long companyId) {
+    //     return fileDocumentRepository.findLogoByCompanyId(companyId);
+    // }
+    
+    // Method to get logo data as base64
+    public String getLogoAsBase64(Long companyId) {
+        Optional<FileDocument> logoDoc = getCompanyLogo(companyId);
+        if (logoDoc.isPresent()) {
+            byte[] logoData = getFileData(logoDoc.get().getFileId());
+            return Base64.getEncoder().encodeToString(logoData);
+        }
+        return null;
+    }
+    
+    // Method to get complete logo info
+    // public LogoInfo getCompanyLogoInfo(Long companyId) {
+    //     Optional<FileDocument> logoDoc = getCompanyLogo(companyId);
+    //     if (logoDoc.isPresent()) {
+    //         FileDocument doc = logoDoc.get();
+    //         byte[] logoData = getFileData(doc.getFileId());
+    //         String base64Data = Base64.getEncoder().encodeToString(logoData);
+            
+    //         return LogoInfo.builder()
+    //                 .fileId(doc.getFileId())
+    //                 .base64Data(base64Data)
+    //                 .contentType(doc.getContentType())
+    //                 .fileName(doc.getFileName())
+    //                 .build();
+    //     }
+    //     return null;
+    // }
+    
+    // Helper class for logo information
+    // @Builder
+    // @Data
+    // public static class LogoInfo {
+    //     private String fileId;
+    //     private String base64Data;
+    //     private String contentType;
+    //     private String fileName;
+        
+    //     public String getDataUrl() {
+    //         return "data:" + contentType + ";base64," + base64Data;
+    //     }
+    // }
     
    private byte[] compressData(byte[] data) {
     try {
@@ -120,4 +196,95 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
            (data[0] & 0xFF) == 0x1f && 
            (data[1] & 0xFF) == 0x8b;
 }
+   public LogoInfo getCompanyLogoInfo(Long companyId) {
+        Optional<FileDocument> logoDoc = getCompanyLogo(companyId);
+        if (logoDoc.isEmpty()) {
+            logoDoc = getCompanyLogoByPattern(companyId); // Fallback
+        }
+        
+        if (logoDoc.isPresent()) {
+            FileDocument doc = logoDoc.get();
+            try {
+                byte[] logoData = doc.getData();
+                String base64Data = Base64.getEncoder().encodeToString(logoData);
+                
+                return LogoInfo.builder()
+                        .fileId(doc.getFileId())
+                        .base64Data(base64Data)
+                        .contentType(doc.getContentType())
+                        .fileName(doc.getFileName())
+                        .build();
+            } catch (Exception e) {
+                log.error("Error processing logo data for company {}: {}", companyId, e.getMessage());
+            }
+        }
+        return null;
+    }
+    
+    // Method to save company logo with mapping
+    @Transactional
+    public String saveCompanyLogo(Long companyId, MultipartFile file) throws IOException {
+          // Check for an existing logo mapping
+    Optional<CompanyFile> existingMapping = companyFileRepository.findLogoByCompanyId(companyId);
+    if (existingMapping.isPresent()) {
+        String oldFileId = existingMapping.get().getFileId();
+        // Delete old file record
+        fileDocumentRepository.deleteByFileId(oldFileId);
+        // Delete mapping record
+        companyFileRepository.delete(existingMapping.get());
+    }
+
+    // Save the new file first
+    String fileId = UUID.randomUUID().toString();
+    
+    FileDocument fileDocument = new FileDocument();
+    fileDocument.setFileId(fileId);
+    fileDocument.setFileName(file.getOriginalFilename());
+    fileDocument.setContentType(file.getContentType());
+    fileDocument.setSize(file.getSize());
+    // Optionally compress if needed
+    fileDocument.setData(file.getBytes());
+    fileDocument.setCompressed(false);
+    
+    fileDocumentRepository.save(fileDocument);
+    
+    // Create a new mapping
+    CompanyFile companyFile = new CompanyFile();
+    companyFile.setCompanyId(companyId);
+    companyFile.setFileId(fileId);
+    companyFile.setFileType(FileType.LOGO);
+    
+    companyFileRepository.save(companyFile);
+    
+    return fileId;
+    }
+  
+    @Builder
+    @Data
+    public static class LogoInfo {
+        private String fileId;
+        private String base64Data;
+        private String contentType;
+        private String fileName;
+        
+        public String getDataUrl() {
+            if (base64Data != null && contentType != null) {
+                return "data:" + contentType + ";base64," + base64Data;
+            }
+            return null;
+        }
+    }
+      public Optional<FileDocument> getCompanyLogoByPattern(Long companyId) {
+        try {
+            // Try different patterns
+            Optional<FileDocument> logo = fileDocumentRepository.findLogoByCompanyIdFromFileName(companyId);
+            if (logo.isEmpty()) {
+                logo = fileDocumentRepository.findLogoByCompanyIdPattern(companyId);
+            }
+            return logo;
+        } catch (Exception e) {
+            log.warn("Failed to find logo for company {} using filename pattern: {}", companyId, e.getMessage());
+            return Optional.empty();
+        }
+    }
 }

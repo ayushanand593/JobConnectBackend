@@ -10,6 +10,9 @@ import com.dcode.jobconnect.entities.User;
 public interface CompanyServiceI {
  CompanyDetailDTO registerCompany(CompanyRegistrationDTO dto);
     Optional<Company> findByCompanyUniqueId(String companyUniqueId);
+
+    Optional<Company> findById(Long companyId);
+
     CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
   
     EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto);

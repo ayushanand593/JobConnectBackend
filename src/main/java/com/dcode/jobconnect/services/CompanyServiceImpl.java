@@ -119,6 +119,11 @@ company.setBenefits(dto.getBenefits());
     public Optional<Company> findByCompanyUniqueId(String companyUniqueId) {
         return companyRepository.findByCompanyUniqueId(companyUniqueId);
     }
+
+    @Override
+    public Optional<Company> findById(Long companyId) {
+        return companyRepository.findById(companyId);
+    }
      @Override
     @Transactional
     public CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO) {
@@ -253,9 +258,6 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
         .map(this::convertToEmployerProfileDTO)
         .toList();
 }
-
-
-
     
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {
         CompanyDetailDTO dto = new CompanyDetailDTO();

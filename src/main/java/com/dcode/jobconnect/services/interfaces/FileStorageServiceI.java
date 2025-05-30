@@ -1,8 +1,11 @@
 package com.dcode.jobconnect.services.interfaces;
 
+import java.util.Optional;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dcode.jobconnect.entities.FileDocument;
+import com.dcode.jobconnect.services.FileStorageServiceImpl.LogoInfo;
 
 public interface FileStorageServiceI {
     /**
@@ -11,6 +14,12 @@ public interface FileStorageServiceI {
      * @return File ID reference
      */
     String uploadFile(MultipartFile file);
+
+     Optional<FileDocument> getCompanyLogo(Long companyId);
+
+     String getLogoAsBase64(Long companyId);
+
+     LogoInfo getCompanyLogoInfo(Long companyId);
     
     /**
      * Delete a file by its reference ID

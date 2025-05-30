@@ -10,7 +10,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -50,9 +49,11 @@ import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobServiceImpl implements JobServiceI {
 
     private final JobRepository jobRepository;
@@ -131,33 +132,16 @@ public class JobServiceImpl implements JobServiceI {
         return mapToJobDTO(job);
     }
 
-    @Override
-    public JobDTO getJobByJobId(String jobId) {
+      public JobDTO getJobByJobId(String jobId) {
         Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
-           if (job.getApplicationDeadline() != null) {
-            // Convert the deadline to LocalDateTime (end of day)
-            LocalDateTime deadline = job.getApplicationDeadline().atTime(23, 59, 59);
-            LocalDateTime now = LocalDateTime.now();
-            if (now.isAfter(deadline)) {
-                job.setStatus(JobStatus.CLOSED);
-                jobRepository.save(job);
-            }
-        }
-        return mapToJobDTO(job);
+                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+        return convertToJobDtoWithLogo(job);
     }
 
-@Override
-@Transactional(readOnly = true)
-public Page<JobDTO> getAllJobs(Pageable pageable) {
-    Page<Job> jobPage = jobRepository.findAll(pageable);
-    
-    List<JobDTO> jobDTOs = jobPage.getContent().stream()
-            .map(this::mapToJobDTO)
-            .toList();
-    
-    return new PageImpl<>(jobDTOs, pageable, jobPage.getTotalElements());
-}
+ public Page<JobDTO> getAllJobs(Pageable pageable) {
+        Page<Job> jobs = jobRepository.findAll(pageable);
+        return jobs.map(this::convertToJobDtoWithLogo);
+    }
 
     @Override
     @Transactional
@@ -366,8 +350,57 @@ public Job getJobEntityByJobId(String jobId) {
                 .collect(Collectors.toList());
         dto.setDisclosureQuestions(questionDTOs);
     }
+     try {
+            FileStorageServiceImpl.LogoInfo logoInfo = fileStorageService.getCompanyLogoInfo(job.getCompany().getId());
+            if (logoInfo != null) {
+                dto.setLogoFileId(logoInfo.getFileId());
+                dto.setLogoBase64(logoInfo.getBase64Data());
+                dto.setLogoContentType(logoInfo.getContentType());
+                dto.setLogoFileName(logoInfo.getFileName());
+            }
+        } catch (Exception e) {
+            // Log the error but don't fail the entire request
+            log.warn("Failed to load logo for company {}: {}", job.getCompany().getId(), e.getMessage());
+        }
 
         return dto;
+    }
+      private JobDTO convertToJobDtoWithLogo(Job job) {
+        // Convert basic job info
+        JobDTO dto = mapToJobDTO(job);
+        
+        
+        // Add logo information
+        if (job.getCompany().getId() != null) {
+            try {
+                FileStorageServiceImpl.LogoInfo logoInfo = 
+                    (FileStorageServiceImpl.LogoInfo) fileStorageService.getCompanyLogoInfo(job.getCompany().getId());
+                
+                if (logoInfo != null) {
+                    dto.setLogoFileId(logoInfo.getFileId());
+                    dto.setLogoBase64(logoInfo.getBase64Data());
+                    dto.setLogoContentType(logoInfo.getContentType());
+                    dto.setLogoFileName(logoInfo.getFileName());
+                    dto.setLogoDataUrl(logoInfo.getDataUrl());
+                    
+                    log.debug("Logo loaded for company {}: {}", job.getCompany().getId(), logoInfo.getFileName());
+                } else {
+                    log.debug("No logo found for company {}", job.getCompany().getId());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load logo for company {}: {}", job.getCompany().getId(), e.getMessage());
+                // Don't fail the entire request, just continue without logo
+            }
+        }
+        
+        return dto;
+    }
+    
+    // Method to update job with logo (for testing)
+    public JobDTO refreshJobWithLogo(String jobId) {
+        Job job = jobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+        return convertToJobDtoWithLogo(job);
     }
 
    private JobDTO updateJobDetails(Job job, JobCreateDTO jobDto) {

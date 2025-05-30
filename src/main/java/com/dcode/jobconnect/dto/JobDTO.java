@@ -2,7 +2,6 @@ package com.dcode.jobconnect.dto;
 
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +16,13 @@ public class JobDTO {
     private String title;
     private String companyName;
     private Long companyId;
+
+    private String logoFileId;
+    private String logoBase64; // Base64 encoded logo data
+    private String logoContentType; // MIME type of the logo
+    private String logoFileName;
+
+    private String logoDataUrl;
     private String location;
     private String jobType;
     private String experienceLevel;

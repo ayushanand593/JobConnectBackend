@@ -27,8 +27,8 @@ import com.dcode.jobconnect.dto.CompanyDashboardStatsDTO;
 import com.dcode.jobconnect.dto.CompanyDetailDTO;
 import com.dcode.jobconnect.dto.CompanyProfileUpdateDTO;
 import com.dcode.jobconnect.dto.CompanyRegistrationDTO;
+import com.dcode.jobconnect.dto.CompanyWithMediaDto;
 import com.dcode.jobconnect.dto.EmployerProfileDTO;
-import com.dcode.jobconnect.dto.ImageUploadResponseDTO;
 import com.dcode.jobconnect.dto.JwtResponseDTO;
 import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.FileDocument;
@@ -36,15 +36,12 @@ import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.services.FileStorageServiceImpl;
 import com.dcode.jobconnect.services.interfaces.AuthServiceI;
-import com.dcode.jobconnect.services.interfaces.CompanyImageServiceI;
 import com.dcode.jobconnect.services.interfaces.CompanyServiceI;
 import com.dcode.jobconnect.services.interfaces.DashboardServiceI;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +55,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CompanyController {
 
      private final CompanyServiceI companyService;
-     private final CompanyImageServiceI companyImageService;
      private final FileStorageServiceI fileStorageService;
 
      private final DashboardServiceI dashboardService;
@@ -79,10 +75,24 @@ public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody Compan
     return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
 }
 
-    @GetMapping("/{companyUniqueId}")
-    @Operation(summary = "Get company profile by unique ID")
-    public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
-        return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
+    // @GetMapping("/{companyUniqueId}")
+    // @Operation(summary = "Get company profile by unique ID")
+    // public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
+    //     return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
+    // }
+
+     @GetMapping("/{companyId}")
+    @Operation(summary = "Get company profile with logo and banner")
+    public ResponseEntity<CompanyWithMediaDto> getCompanyProfile(@PathVariable Long companyId) {
+        try {
+            CompanyWithMediaDto companyDto = companyService.getCompanyWithMedia(companyId);
+            return ResponseEntity.ok(companyDto);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error retrieving company profile {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PutMapping("/profile")
@@ -193,6 +203,106 @@ public ResponseEntity<String> deleteCompany(@PathVariable String companyUniqueId
     private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();
         return contentType != null && contentType.startsWith("image/");
+    }
+
+      @PostMapping("/{companyId}/banner")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Upload company banner")
+    public ResponseEntity<Map<String, String>> uploadCompanyBanner(
+            @PathVariable Long companyId,
+            @RequestParam("file") MultipartFile file) {
+
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        Company company = companyService.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+
+        if (!company.getAdmins().contains(currentUser)) {
+            throw new AccessDeniedException("Not authorized to update banner for this company");
+        }
+        
+        try {
+            if (!isImageFile(file)) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Only image files are allowed"));
+            }
+            
+            Company updatedCompany = companyService.updateCompanyBanner(companyId, file);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Banner uploaded successfully",
+                "fileId", updatedCompany.getBannerFileId(),
+                "companyId", companyId.toString()
+            ));
+            
+        } catch (Exception e) {
+            log.error("Error uploading banner for company {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to upload banner: " + e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/{companyId}/banner")
+    @Operation(summary = "Get company banner")
+    public ResponseEntity<?> getCompanyBanner(@PathVariable Long companyId) {
+        try {
+            Company company = companyService.findById(companyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+            
+            if (company.getBannerFileId() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Optional<FileDocument> bannerDoc = ((FileStorageServiceImpl) fileStorageService).getBannerByFileId(company.getBannerFileId());
+            
+            if (bannerDoc.isPresent()) {
+                FileDocument doc = bannerDoc.get();
+                return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(doc.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + doc.getFileName() + "\"")
+                    .body(doc.getData());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving banner for company {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to retrieve banner"));
+        }
+    }
+    
+    @DeleteMapping("/{companyId}/banner")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Remove company banner")
+    public ResponseEntity<Map<String, String>> removeCompanyBanner(@PathVariable Long companyId) {
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        Company company = companyService.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+
+        if (!company.getAdmins().contains(currentUser)) {
+            throw new AccessDeniedException("Not authorized to remove banner for this company");
+        }
+        
+        try {
+            companyService.removeCompanyBanner(companyId);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Banner removed successfully",
+                "companyId", companyId.toString()
+            ));
+            
+        } catch (Exception e) {
+            log.error("Error removing banner for company {}: {}", companyId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to remove banner: " + e.getMessage()));
+        }
     }
     
     

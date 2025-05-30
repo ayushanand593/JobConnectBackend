@@ -1,7 +1,10 @@
 package com.dcode.jobconnect.services.interfaces;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import com.dcode.jobconnect.dto.*;
 import com.dcode.jobconnect.entities.Company;
@@ -13,7 +16,7 @@ public interface CompanyServiceI {
 
     Optional<Company> findById(Long companyId);
 
-    CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
+   //  CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
   
     EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto);
 
@@ -28,4 +31,10 @@ public interface CompanyServiceI {
     CompanyDetailDTO updateCompanyProfile(CompanyProfileUpdateDTO profileDTO);
 
      void deleteCompanyById(String companyUniqueId);
+
+     Company updateCompanyBanner(Long companyId, MultipartFile bannerFile) throws IOException;
+
+     Company removeCompanyBanner(Long companyId);
+
+     CompanyWithMediaDto getCompanyWithMedia(Long companyId);
 }

@@ -1,24 +1,38 @@
 package com.dcode.jobconnect.services;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.dcode.jobconnect.dto.CompanyDetailDTO;
 import com.dcode.jobconnect.dto.CompanyProfileUpdateDTO;
 import com.dcode.jobconnect.dto.CompanyRegistrationDTO;
+import com.dcode.jobconnect.dto.CompanyWithMediaDto;
 import com.dcode.jobconnect.dto.EmployeeRegistrationDTO;
 import com.dcode.jobconnect.dto.EmployerProfileDTO;
 import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.EmployerProfile;
+import com.dcode.jobconnect.entities.FileDocument;
 import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.UserRole;
 import com.dcode.jobconnect.exceptions.CompanyNotFoundException;
@@ -36,13 +50,16 @@ import com.dcode.jobconnect.repositories.UserRepository;
 import com.dcode.jobconnect.services.interfaces.CompanyServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CompanyServiceImpl implements CompanyServiceI {
 
     private final CompanyRepository companyRepository;
@@ -54,6 +71,7 @@ public class CompanyServiceImpl implements CompanyServiceI {
     private final DisclosureAnswerRepository disclosureAnswerRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmployerProfileRepository employerProfileRepository;
+    private final FileStorageServiceImpl fileStorageService;
 
     @PersistenceContext
     private final EntityManager em;
@@ -105,16 +123,7 @@ company.setBenefits(dto.getBenefits());
         return mapToCompanyDetailDTO(company);
     }
 
-    @Override
-    public CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId) {
-        Company company = companyRepository.findByCompanyUniqueId(companyUniqueId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Company not found with ID: " + companyUniqueId
-                ));
-        return mapToCompanyDetailDTO(company);
-    }
-
+  
      @Override
     public Optional<Company> findByCompanyUniqueId(String companyUniqueId) {
         return companyRepository.findByCompanyUniqueId(companyUniqueId);
@@ -258,7 +267,115 @@ public List<EmployerProfileDTO> getCompanyEmployees(String companyUniqueId) {
         .map(this::convertToEmployerProfileDTO)
         .toList();
 }
+ 
+ @Transactional
+    public Company updateCompanyBanner(Long companyId, MultipartFile bannerFile) throws IOException {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+        
+        // Delete old banner if exists
+        if (company.getBannerFileId() != null) {
+            ((FileStorageServiceImpl) fileStorageService).deleteBannerFile(company.getBannerFileId());
+        }
+        
+        // Save new banner
+        String newBannerFileId = ((FileStorageServiceImpl) fileStorageService).saveBannerFile(bannerFile);
+        
+        // Update company
+        company.setBannerFileId(newBannerFileId);
+        
+        return companyRepository.save(company);
+    }
     
+    
+    // @Transactional
+    // public Company removeCompanyBanner(Long companyId) {
+    //     Company company = companyRepository.findById(companyId)
+    //             .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+        
+    //     // Delete banner file if exists
+    //     if (company.getBannerFileId() != null) {
+    //         ((FileStorageServiceImpl) fileStorageService).deleteBannerFile(company.getBannerFileId());
+    //         company.setBannerFileId(null);
+    //     }
+        
+    //     return companyRepository.save(company);
+    // }
+    
+    // Get company with banner info
+
+    @Transactional
+    public Company removeCompanyBanner(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+        
+        // Delete banner file if exists
+        if (company.getBannerFileId() != null) {
+            ((FileStorageServiceImpl) fileStorageService).deleteBannerFile(company.getBannerFileId());
+            company.setBannerFileId(null);
+        }
+        
+        return companyRepository.save(company);
+    }
+    public CompanyWithMediaDto getCompanyWithMedia(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+        
+        CompanyWithMediaDto dto = new CompanyWithMediaDto();
+        // Map basic company fields
+        dto.setId(company.getId());
+        dto.setCompanyName(company.getCompanyName());
+        dto.setCompanyUniqueId(company.getCompanyUniqueId());
+        dto.setIndustry(company.getIndustry());
+        dto.setSize(company.getSize());
+        dto.setWebsite(company.getWebsite());
+        dto.setDescription(company.getDescription());
+        dto.setLocation(company.getLocation());
+        dto.setAboutUs(company.getAboutUs());
+        dto.setBenefits(company.getBenefits());
+        dto.setCreatedAt(company.getCreatedAt());
+        dto.setUpdatedAt(company.getUpdatedAt());
+        
+        // Add logo info (existing logic)
+        try {
+            FileStorageServiceImpl.LogoInfo logoInfo = 
+                (FileStorageServiceImpl.LogoInfo) fileStorageService.getCompanyLogoInfo(company.getId());
+            if (logoInfo != null) {
+                dto.setLogoFileId(logoInfo.getFileId());
+                dto.setLogoBase64(logoInfo.getBase64Data());
+                dto.setLogoContentType(logoInfo.getContentType());
+                dto.setLogoFileName(logoInfo.getFileName());
+                dto.setLogoDataUrl(logoInfo.getDataUrl());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load logo for company {}: {}", companyId, e.getMessage());
+        }
+        
+        // Add banner info
+        if (company.getBannerFileId() != null) {
+            try {
+                FileStorageServiceImpl.BannerInfo bannerInfo = 
+                    ((FileStorageServiceImpl) fileStorageService).getBannerInfo(company.getBannerFileId());
+                if (bannerInfo != null) {
+                    dto.setBannerFileId(bannerInfo.getFileId());
+                    dto.setBannerBase64(bannerInfo.getBase64Data());
+                    dto.setBannerContentType(bannerInfo.getContentType());
+                    dto.setBannerFileName(bannerInfo.getFileName());
+                    dto.setBannerDataUrl(bannerInfo.getDataUrl());
+                    
+                    log.debug("Banner loaded for company {}: {}", companyId, bannerInfo.getFileName());
+                } else {
+                    log.debug("Banner file not found for company {} with fileId: {}", companyId, company.getBannerFileId());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load banner for company {}: {}", companyId, e.getMessage());
+            }
+        }
+        
+        return dto;
+    }
+     
+
         private CompanyDetailDTO mapToCompanyDetailDTO(Company company) {
         CompanyDetailDTO dto = new CompanyDetailDTO();
         dto.setId(company.getId());

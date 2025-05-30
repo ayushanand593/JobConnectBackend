@@ -9,8 +9,6 @@ import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.CompanyFile;
 
 import java.util.Optional;
-import java.util.List;
-
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company,Long> {

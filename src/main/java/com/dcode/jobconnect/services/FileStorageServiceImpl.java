@@ -8,13 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.CompanyFile;
 import com.dcode.jobconnect.entities.FileDocument;
 import com.dcode.jobconnect.enums.FileType;
-import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.repositories.CompanyFileRepository;
-import com.dcode.jobconnect.repositories.CompanyRepository;
 import com.dcode.jobconnect.repositories.FileDocumentRepository;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
@@ -32,7 +29,6 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
 
     private final FileDocumentRepository fileDocumentRepository;
     private final CompanyFileRepository companyFileRepository;
-    private final CompanyRepository companyRepository;
 
     @Override
     public String uploadFile(MultipartFile file) {
@@ -259,9 +255,92 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
     return fileId;
     }
   
+        // Get banner by file ID (direct from company.bannerFileId)
+    public Optional<FileDocument> getBannerByFileId(String fileId) {
+        if (fileId == null || fileId.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            return fileDocumentRepository.findByFileId(fileId);
+        } catch (Exception e) {
+            log.warn("Failed to find banner with fileId {}: {}", fileId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+    
+    // Get banner info with base64 encoding
+    public BannerInfo getBannerInfo(String fileId) {
+        Optional<FileDocument> bannerDoc = getBannerByFileId(fileId);
+        
+        if (bannerDoc.isPresent()) {
+            FileDocument doc = bannerDoc.get();
+            try {
+                byte[] bannerData = doc.getData();
+                String base64Data = Base64.getEncoder().encodeToString(bannerData);
+                
+                return BannerInfo.builder()
+                        .fileId(doc.getFileId())
+                        .base64Data(base64Data)
+                        .contentType(doc.getContentType())
+                        .fileName(doc.getFileName())
+                        .build();
+            } catch (Exception e) {
+                log.error("Error processing banner data for fileId {}: {}", fileId, e.getMessage());
+            }
+        }
+        return null;
+    }
+
+      @Transactional
+    public String saveBannerFile(MultipartFile file) throws IOException {
+        String fileId = UUID.randomUUID().toString();
+        
+        FileDocument fileDocument = new FileDocument();
+        fileDocument.setFileId(fileId);
+        fileDocument.setFileName(file.getOriginalFilename());
+        fileDocument.setContentType(file.getContentType());
+        fileDocument.setSize(file.getSize());
+        fileDocument.setData(file.getBytes());
+        fileDocument.setCompressed(false);
+        
+        fileDocumentRepository.save(fileDocument);
+        
+        log.info("Banner file saved with fileId: {}", fileId);
+        return fileId;
+    }
+    
+    // Delete banner file
+    @Transactional
+    public void deleteBannerFile(String fileId) {
+        if (fileId != null && !fileId.trim().isEmpty()) {
+            try {
+                fileDocumentRepository.deleteByFileId(fileId);
+                log.info("Banner file deleted with fileId: {}", fileId);
+            } catch (Exception e) {
+                log.error("Error deleting banner file with fileId {}: {}", fileId, e.getMessage());
+            }
+        }
+    }
+    
     @Builder
     @Data
     public static class LogoInfo {
+        private String fileId;
+        private String base64Data;
+        private String contentType;
+        private String fileName;
+        
+        public String getDataUrl() {
+            if (base64Data != null && contentType != null) {
+                return "data:" + contentType + ";base64," + base64Data;
+            }
+            return null;
+        }
+    }
+
+    @Builder
+    @Data
+    public static class BannerInfo {
         private String fileId;
         private String base64Data;
         private String contentType;

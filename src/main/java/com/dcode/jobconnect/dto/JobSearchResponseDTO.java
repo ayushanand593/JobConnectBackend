@@ -20,6 +20,11 @@ public class JobSearchResponseDTO {
     private String title;
     private String companyName;
     private String companyLogoUrl;
+    private String logoFileId;
+    private String logoBase64;
+    private String logoContentType;
+    private String logoFileName;
+    private String logoDataUrl;
     private String location;
     private JobType jobType;
     private String experienceLevel;

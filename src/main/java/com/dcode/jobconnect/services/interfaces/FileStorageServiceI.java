@@ -20,6 +20,10 @@ public interface FileStorageServiceI {
      String getLogoAsBase64(Long companyId);
 
      LogoInfo getCompanyLogoInfo(Long companyId);
+
+     String copyFile(String originalFileId, String newFileName);
+
+     boolean isFileInUse(String fileId);
     
     /**
      * Delete a file by its reference ID

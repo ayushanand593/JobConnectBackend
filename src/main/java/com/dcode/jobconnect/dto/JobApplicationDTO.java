@@ -11,6 +11,8 @@ import com.dcode.jobconnect.enums.ApplicationStatus;
 public class JobApplicationDTO {
     private Long id;
     private Long jobId;
+    private String jobName;
+    private String companyName;
     private Long candidateId;
     private String resumeFileId;
     private String resumeFileName;

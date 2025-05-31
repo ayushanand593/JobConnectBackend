@@ -2,7 +2,12 @@ package com.dcode.jobconnect.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.dcode.jobconnect.dto.CandidateDashboardStatsDTO;
 import com.dcode.jobconnect.dto.CandidateProfileDTO;
@@ -151,6 +157,23 @@ public ResponseEntity<CandidateProfileDTO> uploadResume(
     if (currentUser == null) {
         throw new AccessDeniedException("Not authenticated");
     }
+     Set<String> allowedContentTypes = Set.of(
+        "application/pdf", 
+        "application/msword", 
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+        "text/plain"
+        // If you also want to allow images, add the following:
+        // "image/png",
+        // "image/jpeg"
+    );
+    
+    if (!allowedContentTypes.contains(file.getContentType())) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST, 
+            "Invalid file type. Only PDF, DOC, DOCX, or TXT files are allowed."
+        );
+    }
+    
     return ResponseEntity.ok(candidateService.uploadResume(file));
 }
 
@@ -178,17 +201,30 @@ public ResponseEntity<CandidateProfileDTO> uploadResume(
         return ResponseEntity.ok(dashboardService.getCandidateDashboardStats(startDate, endDate));
     }
 
-@GetMapping("/view/applications")
-    @Operation(summary = "Get all job applications for the current candidate")
+// @GetMapping("/view/applications")
+//     @Operation(summary = "Get all job applications for the current candidate")
+//     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+//     public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
+//         User currentUser = SecurityUtils.getCurrentUser();
+//         if (currentUser == null) {
+//             throw new AccessDeniedException("Not authenticated");
+//         }
+//         return ResponseEntity.ok(dashboardService.getCandidateApplications());
+//     }
+ @GetMapping("/my-applications")
     @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    public ResponseEntity<List<JobApplicationDetailDTO>> getCandidateApplications() {
+    public ResponseEntity<Page<JobApplicationDTO>> getMyApplications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
         User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Not authenticated");
         }
-        return ResponseEntity.ok(dashboardService.getCandidateApplications());
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(jobApplicationService.getCurrentCandidateApplications(pageable));
     }
-
     
 @GetMapping("/view/applications/{applicationId}")
 @Operation(summary = "Get job application details for the current candidate")

@@ -11,8 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dcode.jobconnect.entities.CompanyFile;
 import com.dcode.jobconnect.entities.FileDocument;
 import com.dcode.jobconnect.enums.FileType;
+import com.dcode.jobconnect.exceptions.FileProcessingException;
+import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
+import com.dcode.jobconnect.repositories.CandidateRepository;
 import com.dcode.jobconnect.repositories.CompanyFileRepository;
 import com.dcode.jobconnect.repositories.FileDocumentRepository;
+import com.dcode.jobconnect.repositories.JobApplicationRepository;
 import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
 import jakarta.transaction.Transactional;
@@ -29,6 +33,8 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
 
     private final FileDocumentRepository fileDocumentRepository;
     private final CompanyFileRepository companyFileRepository;
+    private final CandidateRepository candidateRepository;
+    private final JobApplicationRepository jobApplicationRepository;
 
     @Override
     public String uploadFile(MultipartFile file) {
@@ -64,6 +70,47 @@ public class FileStorageServiceImpl implements FileStorageServiceI {
     public FileDocument getFile(String fileId) {
         return fileDocumentRepository.findByFileId(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found with ID: " + fileId));
+    }
+
+    public String copyFile(String originalFileId, String newFileName) {
+        try {
+            // Get the original file
+            FileDocument originalFile = getFile(originalFileId);
+            
+            // Generate new unique fileId
+          String fileId = UUID.randomUUID().toString();
+            
+            // Create a new file document with copied content
+            FileDocument newFile = new FileDocument();
+            newFile.setFileId(fileId);
+            newFile.setFileName(newFileName != null ? newFileName : originalFile.getFileName());
+            newFile.setContentType(originalFile.getContentType());
+            newFile.setSize(originalFile.getSize());
+            newFile.setData(originalFile.getData()); // Copy the actual file data
+            newFile.setCompressed(originalFile.isCompressed());
+            newFile.setIsSnapshot(true); // Mark as snapshot for cleanup purposes
+            newFile.setOriginalFileId(originalFileId); // Reference to original for tracking
+            
+            // Save the new file
+            FileDocument savedFile = fileDocumentRepository.save(newFile);
+            return savedFile.getFileId();
+            
+        } catch (Exception e) {
+            throw new FileProcessingException("Failed to copy file: " + originalFileId, e);
+        }
+    }
+    
+    /**
+     * Checks if a file is referenced by any active job applications or candidate profiles
+     */
+    public boolean isFileInUse(String fileId) {
+        // Check if file is used in candidate profiles
+        boolean usedInProfiles = candidateRepository.existsByResumeFileId(fileId);
+        
+        // Check if file is used in job applications
+        boolean usedInApplications = jobApplicationRepository.existsByResumeFileIdOrCoverLetterFileId(fileId, fileId);
+        
+        return usedInProfiles || usedInApplications;
     }
     
     public byte[] getFileData(String fileId) {

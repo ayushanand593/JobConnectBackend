@@ -269,6 +269,8 @@ public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) 
         dto.setVoluntaryDisclosures(application.getVoluntaryDisclosures());
         dto.setCreatedAt(application.getCreatedAt());
         dto.setUpdatedAt(application.getUpdatedAt());
+        dto.setJobName(application.getJob().getTitle());
+        dto.setCompanyName(application.getJob().getPostedBy().getCompany().getCompanyName());
         
         // Get resume info
         if (application.getResumeFileId() != null) {

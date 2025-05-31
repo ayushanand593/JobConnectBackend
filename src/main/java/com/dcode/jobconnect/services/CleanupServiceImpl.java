@@ -3,16 +3,21 @@ package com.dcode.jobconnect.services;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.dcode.jobconnect.entities.FileDocument;
 import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.enums.ApplicationStatus;
 import com.dcode.jobconnect.repositories.DisclosureQuestionRepository;
+import com.dcode.jobconnect.repositories.FileDocumentRepository;
 import com.dcode.jobconnect.repositories.JobApplicationRepository;
 import com.dcode.jobconnect.repositories.JobRepository;
 import com.dcode.jobconnect.repositories.SavedJobRepository;
 import com.dcode.jobconnect.services.interfaces.CleanupServiceI;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,11 @@ public class CleanupServiceImpl implements CleanupServiceI {
     private final JobRepository jobRepository;
     private final SavedJobRepository savedJobRepository;  // You'll need this
     private final DisclosureQuestionRepository disclosureQuestionRepository;  // And this
+   
+    private FileStorageServiceI fileStorageService;
+    
+
+    private FileDocumentRepository fileDocumentRepository;
     
     // This scheduled task runs daily at 2AM to remove withdrawn applications older than 15 days.
     @Scheduled(cron = "0 0 2 * * ?")
@@ -84,6 +94,65 @@ public class CleanupServiceImpl implements CleanupServiceI {
             }
         } catch (Exception e) {
             log.error("Error during expired jobs cleanup", e);
+        }
+    }
+
+    @Async
+    public void scheduleFileCleanup(String fileId) {
+        try {
+            // Wait a bit to ensure any ongoing operations complete
+            Thread.sleep(5000); // 5 seconds delay
+            
+            cleanupUnusedFile(fileId);
+            
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("File cleanup interrupted for fileId: {}", fileId);
+        }
+    }
+    
+    /**
+     * Cleans up a file if it's no longer in use
+     */
+    @Transactional
+    public void cleanupUnusedFile(String fileId) {
+        try {
+            if (!fileStorageService.isFileInUse(fileId)) {
+                fileStorageService.deleteFile(fileId);
+                log.info("Successfully cleaned up unused file: {}", fileId);
+            } else {
+                log.debug("File {} is still in use, skipping cleanup", fileId);
+            }
+        } catch (Exception e) {
+            log.error("Error during file cleanup for fileId: {}", fileId, e);
+        }
+    }
+    
+    /**
+     * Scheduled cleanup job that runs periodically to clean up orphaned files
+     */
+    @Scheduled(cron = "0 0 2 * * ?") // Run daily at 2 AM
+    @Transactional
+    public void cleanupOrphanedFiles() {
+        log.info("Starting scheduled cleanup of orphaned files");
+        
+        try {
+            // Find snapshot files older than 1 day
+            List<FileDocument> potentialOrphanFiles = fileDocumentRepository
+                .findByIsSnapshotTrue();
+            
+            int cleanedCount = 0;
+            for (FileDocument file : potentialOrphanFiles) {
+                if (!fileStorageService.isFileInUse(file.getFileId())) {
+                    fileStorageService.deleteFile(file.getFileId());
+                    cleanedCount++;
+                }
+            }
+            
+            log.info("Scheduled cleanup completed. Cleaned {} orphaned files", cleanedCount);
+            
+        } catch (Exception e) {
+            log.error("Error during scheduled file cleanup", e);
         }
     }
 

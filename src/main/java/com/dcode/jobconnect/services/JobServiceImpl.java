@@ -35,6 +35,8 @@ import com.dcode.jobconnect.entities.User;
 import com.dcode.jobconnect.enums.ApplicationStatus;
 import com.dcode.jobconnect.enums.JobStatus;
 import com.dcode.jobconnect.enums.JobType;
+import com.dcode.jobconnect.exceptions.FileNotFoundException;
+import com.dcode.jobconnect.exceptions.FileProcessingException;
 import com.dcode.jobconnect.exceptions.ResourceNotFoundException;
 import com.dcode.jobconnect.repositories.CandidateRepository;
 import com.dcode.jobconnect.repositories.DisclosureAnswerRepository;
@@ -574,12 +576,30 @@ private JobApplication createJobApplication(Job job, Candidate candidate,
 }
 
 private void handleResumeUpload(JobApplication application, Candidate candidate, 
-                               JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile) {
+                                JobApplicationSubmissionDTO applicationCreateDTO, MultipartFile resumeFile) {
     boolean useExistingResume = Boolean.TRUE.equals(applicationCreateDTO.getUseExistingResume());
     
     if (useExistingResume) {
-        validateAndUseExistingResume(application, candidate);
-    } else if (resumeFile != null && !resumeFile.isEmpty()) {
+        if (candidate.getResumeFileId() == null) {
+            throw new ResourceNotFoundException("Candidate does not have a stored resume");
+        }
+        
+        // Create a COPY of the existing resume for this job application
+        // This ensures the job application has its own file reference
+        try {
+            FileDocument originalResume = fileStorageService.getFile(candidate.getResumeFileId());
+            String copiedResumeId = fileStorageService.copyFile(
+                candidate.getResumeFileId(), 
+                "JobApp_" + application.getId() + "_" + originalResume.getFileName()
+            );
+            application.setResumeFileId(copiedResumeId);
+            
+        } catch (Exception e) {
+            throw new FileProcessingException("Failed to copy resume for job application", e);
+        }
+    } 
+    else if (resumeFile != null && !resumeFile.isEmpty()) {
+        // Upload new resume file directly for this application
         String resumeFileId = fileStorageService.uploadFile(resumeFile);
         application.setResumeFileId(resumeFileId);
     } else {
@@ -587,12 +607,12 @@ private void handleResumeUpload(JobApplication application, Candidate candidate,
     }
 }
 
-private void validateAndUseExistingResume(JobApplication application, Candidate candidate) {
-    if (candidate.getResumeFileId() == null) {
-        throw new ResourceNotFoundException("Candidate does not have a stored resume");
-    }
-    application.setResumeFileId(candidate.getResumeFileId());
-}
+// private void validateAndUseExistingResume(JobApplication application, Candidate candidate) {
+//     if (candidate.getResumeFileId() == null) {
+//         throw new ResourceNotFoundException("Candidate does not have a stored resume");
+//     }
+//     application.setResumeFileId(candidate.getResumeFileId());
+// }
 
 private void handleCoverLetterUpload(JobApplication application, MultipartFile coverLetterFile) {
     if (coverLetterFile != null && !coverLetterFile.isEmpty()) {

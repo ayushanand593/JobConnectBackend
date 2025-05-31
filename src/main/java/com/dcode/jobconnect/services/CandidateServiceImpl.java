@@ -49,6 +49,7 @@ public class CandidateServiceImpl implements CandidateServiceI {
              private final FileStorageServiceI fileStorageService; 
               private final JobApplicationRepository jobApplicationRepository;
     private final DisclosureAnswerRepository disclosureAnswerRepository;
+    private final CleanupServiceImpl cleanupServiceImpl;
 
     private final SavedJobRepository savedJobRepository;
              private String errMsg = "Candidate profile not found ";
@@ -191,32 +192,31 @@ public void deleteCandidateById(Long candidateId) {
     userRepository.deleteById(candidateId);
 }
 
-    @Override
-    @Transactional
-    public CandidateProfileDTO uploadResume(MultipartFile file) {
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
-
-        Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(errMsg));
-
-        // If there's an existing resume, delete it
-        if (candidate.getResumeFileId() != null) {
-            fileStorageService.deleteFile(candidate.getResumeFileId());
-        }
-
-        // Upload the file and get the file ID
-        String resumeFileId = fileStorageService.uploadFile(file);
-
-        // Update candidate resume file ID
-        candidate.setResumeFileId(resumeFileId);
-        candidate = candidateRepository.save(candidate);
-
-        return mapToCandidateProfileDTO(candidate);
+public CandidateProfileDTO uploadResume(MultipartFile file) {
+    User currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new AccessDeniedException("Not authenticated");
     }
 
+    Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
+            .orElseThrow(() -> new ResourceNotFoundException(errMsg));
+
+    String oldResumeFileId = candidate.getResumeFileId();
+    
+    // Upload the new file
+    String newResumeFileId = fileStorageService.uploadFile(file);
+    
+    // Update candidate with new resume file ID
+    candidate.setResumeFileId(newResumeFileId);
+    candidate = candidateRepository.save(candidate);
+    
+    // Schedule cleanup of old resume file (if it exists)
+    if (oldResumeFileId != null) {
+        scheduleFileCleanup(oldResumeFileId);
+    }
+
+    return mapToCandidateProfileDTO(candidate);
+}
     @Override
 public User findUserByEmail(String email) {
     return userRepository.findByEmail(email)
@@ -226,31 +226,32 @@ public User findUserByEmail(String email) {
 
     private CandidateProfileDTO mapToCandidateProfileDTO(Candidate candidate) {
         CandidateProfileDTO dto = new CandidateProfileDTO();
-        dto.setId(candidate.getId());
-        dto.setFirstName(candidate.getFirstName());
-        dto.setLastName(candidate.getLastName());
-        dto.setEmail(candidate.getUser().getEmail());
-        dto.setPhone(candidate.getPhone());
-        dto.setHeadline(candidate.getHeadline());
-        dto.setSummary(candidate.getSummary());
-        dto.setExperienceYears(candidate.getExperienceYears());
-        dto.setCreatedAt(candidate.getUser().getCreatedAt());
+    dto.setId(candidate.getId());
+    dto.setFirstName(candidate.getFirstName());
+    dto.setLastName(candidate.getLastName());
+    dto.setEmail(candidate.getUser().getEmail());
+    dto.setPhone(candidate.getPhone());
+    dto.setHeadline(candidate.getHeadline());
+    dto.setSummary(candidate.getSummary());
+    dto.setExperienceYears(candidate.getExperienceYears());
+    dto.setCreatedAt(candidate.getUser().getCreatedAt());
 
-         if (candidate.getResumeFileId() != null) {
-            try {
-                FileDocument fileDocument = fileStorageService.getFile(candidate.getResumeFileId());
-                dto.setResumeFileId(candidate.getResumeFileId());
-                dto.setResumeFileName(fileDocument.getFileName());
-            } catch (Exception e) {
-                // If file not found, just don't set the resume info
-            }
+    if (candidate.getResumeFileId() != null) {
+        try {
+            FileDocument fileDocument = fileStorageService.getFile(candidate.getResumeFileId());
+            dto.setResumeFileId(candidate.getResumeFileId());
+            dto.setResumeFileName(fileDocument.getFileName());
+        } catch (Exception e) {
+            // If file not found, just don't set the resume info
         }
-
-        List<SkillDTO> skillDTOs = mapToSkillDTOs(candidate.getSkills());
-        dto.setSkills(skillDTOs);
-
-        return dto;
     }
+
+    List<SkillDTO> skillDTOs = mapToSkillDTOs(candidate.getSkills());
+    dto.setSkills(skillDTOs);
+
+    return dto;
+}
+    
 
     
     private List<SkillDTO> mapToSkillDTOs(Set<Skill> skills) {
@@ -303,4 +304,9 @@ public void deleteCandidateRelatedEntitiesBulk(Long candidateId) {
     // STEP 5: Clear many-to-many relationships using native query
     candidateRepository.deleteCandidateSkillsByCandidateId(candidateId);
 }
+ private void scheduleFileCleanup(String fileId) {
+        if (fileId != null) {
+            cleanupServiceImpl.scheduleFileCleanup(fileId);
+        }
+    }
 }

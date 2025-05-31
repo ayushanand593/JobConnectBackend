@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.dcode.jobconnect.entities.CompanyFile;
 import com.dcode.jobconnect.entities.FileDocument;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,9 @@ import java.util.Optional;
 public interface FileDocumentRepository extends JpaRepository<FileDocument, Long> {
     Optional<FileDocument> findByFileId(String fileId);
     void deleteByFileId(String fileId);
+
+    List<FileDocument> findByIsSnapshotTrue();
+    boolean existsByFileId(String fileId);
     
 @Query("SELECT f FROM FileDocument f WHERE f.fileName LIKE CONCAT('%company_', :companyId, '_logo%')")
     Optional<FileDocument> findLogoByCompanyIdFromFileName(@Param("companyId") Long companyId);
@@ -29,6 +33,8 @@ public interface FileDocumentRepository extends JpaRepository<FileDocument, Long
 
      @Query("SELECT cf FROM CompanyFile cf WHERE cf.companyId = :companyId AND cf.fileType = 'LOGO'")
     Optional<CompanyFile> findLogoByCompanyId(@Param("companyId") Long companyId);
+
+      List<FileDocument> findByIsSnapshotTrueAndUploadedAtBefore(LocalDateTime dateTime);
 
 
 }

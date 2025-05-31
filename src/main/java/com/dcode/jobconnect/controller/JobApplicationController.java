@@ -64,20 +64,7 @@ public class JobApplicationController {
         return ResponseEntity.ok(application);
     }
     
-    @GetMapping("/my-applications")
-    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    public ResponseEntity<Page<JobApplicationDTO>> getMyApplications(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(jobApplicationService.getCurrentCandidateApplications(pageable));
-    }
+   
     
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")

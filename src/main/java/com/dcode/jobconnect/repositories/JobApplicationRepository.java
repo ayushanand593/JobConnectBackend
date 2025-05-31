@@ -23,6 +23,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByCandidateId(Long candidateId);
     Page<JobApplication> findByJobId(Long jobId, Pageable pageable);
     boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId);
+    boolean existsByResumeFileIdOrCoverLetterFileId(String resumeFileId, String coverLetterFileId);
 
     @Query("SELECT a FROM JobApplication  a WHERE a.job.jobId = :jobId")
     List<JobApplication> findByJobId(@Param("jobId") String jobId);

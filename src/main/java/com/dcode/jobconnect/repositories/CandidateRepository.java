@@ -21,4 +21,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
         @Modifying
 @Query(value = "DELETE FROM candidate_skills WHERE candidate_id = :candidateId", nativeQuery = true)
 void deleteCandidateSkillsByCandidateId(@Param("candidateId") Long candidateId);
+
+  boolean existsByResumeFileId(String resumeFileId);
 }

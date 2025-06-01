@@ -40,16 +40,4 @@ void deleteByCompanyId(@Param("companyId") Long companyId);
 @Query(value = "DELETE FROM job_skills WHERE job_id IN (SELECT id FROM jobs WHERE company_id = :companyId)", nativeQuery = true)
 void clearJobSkillsByCompanyId(@Param("companyId") Long companyId);
 
-//  @Query("""
-//         SELECT new JobDTO(
-//             j.id, j.jobId, j.title, c.companyName, c.id, j.location,
-//             j.jobType, j.experienceLevel, j.salaryRange, j.createdAt,
-//             j.updatedAt, j.status
-//         )
-//         FROM Job j 
-//         INNER JOIN j.company c
-//         ORDER BY j.createdAt DESC
-//         """)
-//     Page<JobDTO> findAllJobsWithDetails(Pageable pageable);
-
 }

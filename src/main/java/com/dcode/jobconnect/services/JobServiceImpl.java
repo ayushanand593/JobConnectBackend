@@ -193,9 +193,18 @@ public JobApplicationDTO applyToJob(String jobId, JobApplicationSubmissionDTO ap
         throw new AccessDeniedException("Not authenticated");
     }
 
-    Candidate candidate = findCandidateByUser(currentUser.getId());
-    Job job = findJobById(jobId);
-    
+    // Candidate candidate = findCandidateByUser(currentUser.getId());
+    Candidate candidate = candidateRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate Not Found"));
+
+        Job job = jobRepository.findById(applicationCreateDTO.getJobId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
+
+        // Check if already applied
+        if (jobApplicationRepository.existsByJobIdAndCandidateId(job.getId(), candidate.getId())) {
+            throw new IllegalArgumentException("You have already applied to this job");
+        }
+
     validateJobApplication(job, candidate);
     
     JobApplication application = createJobApplication(job, candidate, applicationCreateDTO);
@@ -516,15 +525,15 @@ private void validateDisclosureAnswers(List<DisclosureQuestion> questions, List<
         }
     }
 }
-private Candidate findCandidateByUser(Long userId) {
-    return candidateRepository.findByUserId(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
-}
+// private Candidate findCandidateByUser(Long userId) {
+//     return candidateRepository.findByUserId(userId)
+//             .orElseThrow(() -> new ResourceNotFoundException("Candidate profile not found"));
+// }
 
-private Job findJobById(String jobId) {
-    return jobRepository.findByJobId(jobId)
-            .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
-}
+// private Job findJobById(String jobId) {
+//     return jobRepository.findByJobId(jobId)
+//             .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND + jobId));
+// }
 
 private void validateJobApplication(Job job, Candidate candidate) {
     validateJobStatus(job);

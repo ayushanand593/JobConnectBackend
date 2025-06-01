@@ -29,25 +29,25 @@ public class JobApplicationController {
     private final JobApplicationServiceI jobApplicationService;
 
   
-    @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
-    @Operation(summary = "Submit a job application")
-    public ResponseEntity<JobApplicationDTO> submitApplication(
-            @RequestPart("applicationData") JobApplicationSubmissionDTO submissionDTO,
-            @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
-            @RequestPart(value = "coverLetterFile", required = false) MultipartFile coverLetterFile) {
+    // @PostMapping
+    // @PreAuthorize("hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
+    // @Operation(summary = "Submit a job application")
+    // public ResponseEntity<JobApplicationDTO> submitApplication(
+    //         @RequestPart("applicationData") JobApplicationSubmissionDTO submissionDTO,
+    //         @RequestPart(value = "resumeFile", required = false) MultipartFile resumeFile,
+    //         @RequestPart(value = "coverLetterFile", required = false) MultipartFile coverLetterFile) {
         
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
+    //     User currentUser = SecurityUtils.getCurrentUser();
+    //     if (currentUser == null) {
+    //         throw new AccessDeniedException("Not authenticated");
+    //     }
         
         
-        JobApplicationDTO applicationDTO = jobApplicationService.submitApplication(
-                submissionDTO, resumeFile, coverLetterFile);
+    //     JobApplicationDTO applicationDTO = jobApplicationService.submitApplication(
+    //             submissionDTO, resumeFile, coverLetterFile);
         
-        return ResponseEntity.ok(applicationDTO);
-    }
+    //     return ResponseEntity.ok(applicationDTO);
+    // }
     
      @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")

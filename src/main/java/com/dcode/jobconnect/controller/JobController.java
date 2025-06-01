@@ -247,19 +247,13 @@ public ResponseEntity<JobApplicationDTO> applyToJob(
      */
     @GetMapping("/{jobId}/disclosure-questions")
     @Operation(summary = "Get disclosure questions for a job")
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER') or hasAuthority('ROLE_CANDIDATE') or hasAuthority('CANDIDATE')")
     public ResponseEntity<JobDisclosureQuestionsDTO> getJobDisclosureQuestions(@PathVariable String jobId) {
           User currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new AccessDeniedException("Not authorized to view disclosure questions");
         }
 
-        Job job = jobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException(errMsg + jobId));
-
-        // Check if user has permission to see disclosures for this job
-        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("Not authorized to view disclosure questions for this job");
-        }
         JobDisclosureQuestionsDTO questions = jobService.getJobDisclosureQuestions(jobId);
         return ResponseEntity.ok(questions);
     }

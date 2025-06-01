@@ -14,6 +14,7 @@ public class JobApplicationDTO {
     private String jobName;
     private String companyName;
     private Long candidateId;
+    private String candidateName;
     private String resumeFileId;
     private String resumeFileName;
     private String coverLetterFileId;

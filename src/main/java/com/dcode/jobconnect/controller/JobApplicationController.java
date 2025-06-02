@@ -66,25 +66,25 @@ public class JobApplicationController {
     
    
     
-    @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
-    @Operation(summary = "Update the status of a job application")
-    public ResponseEntity<JobApplicationDTO> updateApplicationStatus(
-            @PathVariable Long id,
-            @RequestBody JobApplicationUpdateDTO updateDTO) {
+    // @PutMapping("/{id}/status")
+    // @PreAuthorize("hasAuthority('ROLE_EMPLOYER') or hasAuthority('EMPLOYER')")
+    // @Operation(summary = "Update the status of a job application")
+    // public ResponseEntity<JobApplicationDTO> updateApplicationStatus(
+    //         @PathVariable Long id,
+    //         @RequestBody JobApplicationUpdateDTO updateDTO) {
         
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Not authenticated");
-        }
+    //     User currentUser = SecurityUtils.getCurrentUser();
+    //     if (currentUser == null) {
+    //         throw new AccessDeniedException("Not authenticated");
+    //     }
         
-        // Verify that the application belongs to a job owned by this employer
-        if (!jobApplicationService.isApplicationForEmployerJob(id, currentUser.getId())) {
-            throw new AccessDeniedException("You can only update applications for your own jobs");
-        }
+    //     // Verify that the application belongs to a job owned by this employer
+    //     if (!jobApplicationService.isApplicationForEmployerJob(id, currentUser.getId())) {
+    //         throw new AccessDeniedException("You can only update applications for your own jobs");
+    //     }
         
-        return ResponseEntity.ok(jobApplicationService.updateApplicationStatus(id, updateDTO));
-    }
+    //     return ResponseEntity.ok(jobApplicationService.updateApplicationStatus(id, updateDTO));
+    // }
     
      
 }

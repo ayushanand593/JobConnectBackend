@@ -178,21 +178,21 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
     /**
      * Update application status (usually done by employer)
      */
-    @Transactional
-    public JobApplicationDTO updateApplicationStatus(Long id, JobApplicationUpdateDTO updateDTO) {
-        // Note: In a real application, you would add security checks to ensure
-        // only the employer who posted the job can update the status
+    // @Transactional
+    // public JobApplicationDTO updateApplicationStatus(Long id, JobApplicationUpdateDTO updateDTO) {
+    //     // Note: In a real application, you would add security checks to ensure
+    //     // only the employer who posted the job can update the status
         
-        JobApplication application = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND));
+    //     JobApplication application = jobApplicationRepository.findById(id)
+    //             .orElseThrow(() -> new ResourceNotFoundException(JOB_NOT_FOUND));
         
-        application.setStatus(updateDTO.getStatus());
-        application.setUpdatedAt(LocalDateTime.now());
+    //     application.setStatus(updateDTO.getStatus());
+    //     application.setUpdatedAt(LocalDateTime.now());
         
-        application = jobApplicationRepository.save(application);
+    //     application = jobApplicationRepository.save(application);
         
-        return mapToJobApplicationDTO(application);
-    }
+    //     return mapToJobApplicationDTO(application);
+    // }
 
     /**
      * Withdraw an application (by the candidate)
@@ -222,7 +222,7 @@ public class JobApplicationServiceImpl implements JobApplicationServiceI {
     jobApplicationRepository.save(application);
     }
 
-     @Override
+@Override
 @Transactional
 public void updateApplicationStatus(Long id, ApplicationStatus status) {
     User currentUser = SecurityUtils.getCurrentUser();
@@ -237,7 +237,7 @@ public void updateApplicationStatus(Long id, ApplicationStatus status) {
     if (!application.getJob().getCompany().getId().equals(currentUser.getCompany().getId())) {
         throw new AccessDeniedException("Not authorized to update this application");
     }
-
+    
     application.setStatus(status);
     applicationRepository.save(application);
 }

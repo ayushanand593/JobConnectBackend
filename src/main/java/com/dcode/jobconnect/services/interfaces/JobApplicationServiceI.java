@@ -20,7 +20,7 @@ public interface JobApplicationServiceI {
 
         Page<JobApplicationDTO> getCurrentCandidateApplications(Pageable pageable);
 
-        JobApplicationDTO updateApplicationStatus(Long id, JobApplicationUpdateDTO updateDTO);
+        // JobApplicationDTO updateApplicationStatus(Long id, JobApplicationUpdateDTO updateDTO);
 
         void withdrawApplication(Long id);
 

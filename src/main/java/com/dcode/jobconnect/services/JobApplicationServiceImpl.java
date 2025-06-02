@@ -31,6 +31,8 @@ import com.dcode.jobconnect.utils.SecurityUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -262,10 +264,16 @@ public boolean isApplicationForEmployerJob(Long applicationId, Long employerId) 
     
     private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
         JobApplicationDTO dto = new JobApplicationDTO();
+        Optional<Candidate> candidate = candidateRepository.findById(application.getCandidate().getId());
         dto.setId(application.getId());
         dto.setJobId(application.getJob().getId());
         dto.setCandidateId(application.getCandidate().getId());
         dto.setCandidateName(application.getCandidate().getFirstName()+" "+application.getCandidate().getLastName());
+        dto.setExperienceYears(application.getCandidate().getExperienceYears());
+        dto.setHeadline(application.getCandidate().getHeadline());
+        dto.setSkills(application.getCandidate().getSkills().stream()
+        .map(skill -> skill.getName())
+        .collect(Collectors.toSet()));
         dto.setStatus(application.getStatus());
         dto.setVoluntaryDisclosures(application.getVoluntaryDisclosures());
         dto.setCreatedAt(application.getCreatedAt());

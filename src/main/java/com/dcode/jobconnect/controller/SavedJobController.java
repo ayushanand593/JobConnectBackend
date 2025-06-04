@@ -15,6 +15,8 @@ import com.dcode.jobconnect.dto.SavedJobDTO;
 import com.dcode.jobconnect.entities.Job;
 import com.dcode.jobconnect.entities.SavedJob;
 import com.dcode.jobconnect.entities.User;
+import com.dcode.jobconnect.services.FileStorageServiceImpl.LogoInfo;
+import com.dcode.jobconnect.services.interfaces.FileStorageServiceI;
 import com.dcode.jobconnect.services.interfaces.SavedJobServiceI;
 import com.dcode.jobconnect.utils.SecurityUtils;
 
@@ -28,6 +30,7 @@ import java.util.NoSuchElementException;
 public class SavedJobController {
 
     private final SavedJobServiceI savedJobService;
+    private final FileStorageServiceI fileStorageService;
 
     /**
      * Save a job for the current candidate
@@ -57,14 +60,16 @@ public class SavedJobController {
 
     // Helper method to convert SavedJob entity to DTO
     private SavedJobDTO convertToDTO(SavedJob savedJob) {
-        return new SavedJobDTO(
+       SavedJobDTO dto = new SavedJobDTO(
             savedJob.getId(),
             savedJob.getCandidate().getId(),
             savedJob.getJob().getJobId(),
             savedJob.getJob().getTitle(),
             savedJob.getJob().getCompany().getCompanyName(),
             savedJob.getSavedAt()
-        );
+    );
+
+    return dto;
     }
 
     /**
@@ -124,8 +129,18 @@ public class SavedJobController {
         dto.setJobType(job.getJobType().name());
         dto.setExperienceLevel(job.getExperienceLevel());
         dto.setDescription(job.getDescription());
-        // Set other fields as needed
-        return dto;
+          Long companyId = job.getCompany().getId();
+    LogoInfo logoInfo = fileStorageService.getCompanyLogoInfo(companyId);
+         if (logoInfo != null) {
+        // 2. Set the logo fields on the DTO
+        dto.setLogoFileId(logoInfo.getFileId());
+        dto.setLogoBase64(logoInfo.getBase64Data());
+        dto.setLogoContentType(logoInfo.getContentType());
+        dto.setLogoFileName(logoInfo.getFileName());
+        // dataUrl = "data:<MIME>;base64,<BASE64>"
+        dto.setLogoDataUrl(logoInfo.getDataUrl());
+    }
+    return dto;
     }
 
     /**

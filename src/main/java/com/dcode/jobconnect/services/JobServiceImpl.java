@@ -496,11 +496,19 @@ private JobApplicationDTO mapToJobApplicationDTO(JobApplication application) {
     }
 
     private String generateJobId(String companyName, String jobTitle) {
-        String baseId = companyName.replaceAll("\\s+", "-").toLowerCase() + "-" +
-                jobTitle.replaceAll("\\s+", "-").toLowerCase();
-        String timestamp = String.valueOf(System.currentTimeMillis()).substring(6);
-        return baseId + "-" + timestamp;
-    }
+    String baseId = sanitize(companyName) + "-" + sanitize(jobTitle);
+    String timestamp = String.valueOf(System.currentTimeMillis()).substring(6);
+    return baseId + "-" + timestamp;
+}
+
+// Helper method to sanitize strings
+private String sanitize(String input) {
+    return input
+            .trim()
+            .toLowerCase()
+            .replaceAll("[^a-z0-9]+", "-")  // Replace non-alphanumeric with dash
+            .replaceAll("(^-+|-+$)", "");   // Remove leading/trailing dashes
+}
 
     private DisclosureQuestionDTO mapToDisclosureQuestionDTO(DisclosureQuestion question) {
         DisclosureQuestionDTO dto = new DisclosureQuestionDTO();

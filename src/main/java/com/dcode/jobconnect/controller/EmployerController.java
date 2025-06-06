@@ -78,14 +78,13 @@ public class EmployerController {
                         "Company not found with ID: " + dto.getCompanyUniqueId()
                 ));
         
-        // Register employer
-        companyService.addEmployerToCompany(dto);
-        
-        // Auto-login the employer
-        User user = companyService.findEmployerByEmail(dto.getEmail());
-        JwtResponseDTO authResponse = authService.generateTokenForUser(user);
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
+          // Register employer (this should create both User and EmployerProfile)
+    User user = companyService.addEmployerToCompany(dto);
+    
+    // Auto-login the employer
+    JwtResponseDTO authResponse = authService.generateTokenForUser(user);
+    
+    return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
     @GetMapping("/my-profile")

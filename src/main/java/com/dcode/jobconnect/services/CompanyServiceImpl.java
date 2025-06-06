@@ -187,54 +187,47 @@ public void deleteCompanyById(String companyUniqueId) {
 
     @Override
     @Transactional
-    public EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto) {
-        // Check if email already exists
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new DuplicateEmailException("Email already registered");
-        }
-
-        if(!dto.isTermsAccepted()){
-            throw new TermsNotAcceptedException("You must accept the terms and conditions to continue");
-        }
-        // Find company by unique ID
-        Company company = companyRepository.findByCompanyUniqueId(dto.getCompanyUniqueId())
-                .orElseThrow(()-> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Company not found with ID: " + dto.getCompanyUniqueId()
-                ));
-
-        // Create user
-        User user = new User();
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(UserRole.EMPLOYER);
-        user.setCompany(company);
-        user.setTermsAccepted(true);
-        user.setTermsAcceptedAt(LocalDateTime.now());
-
-        // Save user
-        user = userRepository.save(user);
-
-        // Create employer profile
-        EmployerProfile profile = new EmployerProfile();
-        profile.setUser(user);
-        profile.setFirstName(dto.getFirstName());
-        profile.setLastName(dto.getLastName());
-
-        // Save employer profile
-        profile = employerProfileRepository.save(profile);
-
-        // Map to DTO and return
-        EmployerProfileDTO profileDTO = new EmployerProfileDTO();
-        profileDTO.setId(profile.getId());
-        profileDTO.setFirstName(profile.getFirstName());
-        profileDTO.setLastName(profile.getLastName());
-        profileDTO.setEmail(user.getEmail());
-        profileDTO.setCompanyName(company.getCompanyName());
-        profileDTO.setCompanyId(company.getId());
-
-        return profileDTO;
+public User addEmployerToCompany(EmployeeRegistrationDTO dto) {
+    // Check if user already exists
+    if (userRepository.existsByEmail(dto.getEmail())) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT, 
+            "User with this email already exists"
+        );
     }
+    
+    // Find the company
+    Company company = findByCompanyUniqueId(dto.getCompanyUniqueId())
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Company not found with ID: " + dto.getCompanyUniqueId()
+            ));
+    
+    // Create the User entity
+    User user = new User();
+    user.setEmail(dto.getEmail());
+    user.setPassword(passwordEncoder.encode(dto.getPassword()));
+    user.setRole(UserRole.EMPLOYER);
+    user.setCompany(company);
+    user.setTermsAccepted(dto.isTermsAccepted());
+    user.setTermsAcceptedAt(LocalDateTime.now());
+    
+    // Save user first
+    User savedUser = userRepository.save(user);
+    
+    // Create EmployerProfile
+    EmployerProfile employerProfile = new EmployerProfile();
+    employerProfile.setUser(savedUser);
+    employerProfile.setFirstName(dto.getFirstName());
+    employerProfile.setLastName(dto.getLastName() != null ? dto.getLastName() : ""); // Handle null lastName
+    employerProfile.setPhone(""); // Default empty, can be updated later
+    employerProfile.setJobTitle(""); // Default empty, can be updated later
+    
+    // Save employer profile
+    employerProfileRepository.save(employerProfile);
+    
+    return savedUser;
+}
 
        @Override
 public User findCompanyAdminByEmail(String email) {
@@ -253,10 +246,18 @@ public User findCompanyAdminByEmail(String email) {
         return company.getAdmins().stream().anyMatch(admin -> admin.getId().equals(user.getId()));
     }
 
-       @Override
+
+@Override
 public User findEmployerByEmail(String email) {
-    return userRepository.findByEmail(email)
+    User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    
+    // Verify the user is an employer
+    if (!user.getRole().equals(UserRole.EMPLOYER)) {
+        throw new AccessDeniedException("User is not an employer");
+    }
+    
+    return user;
 }
 
 @Override

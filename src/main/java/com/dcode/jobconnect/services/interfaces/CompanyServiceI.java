@@ -18,7 +18,7 @@ public interface CompanyServiceI {
 
    //  CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
   
-    EmployerProfileDTO addEmployerToCompany(EmployeeRegistrationDTO dto);
+    User addEmployerToCompany(EmployeeRegistrationDTO dto);
 
     User findCompanyAdminByEmail(String email);
 

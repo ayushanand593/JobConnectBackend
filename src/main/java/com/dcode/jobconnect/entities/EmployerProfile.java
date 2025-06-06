@@ -1,6 +1,8 @@
 package com.dcode.jobconnect.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +18,7 @@ public class EmployerProfile {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonManagedReference
     private User user;
 
     @Column(name = "first_name", nullable = false)

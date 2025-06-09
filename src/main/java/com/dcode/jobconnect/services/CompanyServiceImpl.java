@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -123,6 +124,61 @@ company.setBenefits(dto.getBenefits());
         return mapToCompanyDetailDTO(company);
     }
 
+    @Override
+public List<CompanyWithMediaDto> searchCompaniesByName(String companyName) {
+    List<Company> companies = companyRepository.findByCompanyNameContainingIgnoreCase(companyName);
+    return companies.stream()
+            .map(company -> {
+                CompanyWithMediaDto dto = new CompanyWithMediaDto();
+                // Map basic company fields
+                dto.setId(company.getId());
+                dto.setCompanyName(company.getCompanyName());
+                dto.setCompanyUniqueId(company.getCompanyUniqueId());
+                dto.setIndustry(company.getIndustry());
+                dto.setSize(company.getSize());
+                dto.setWebsite(company.getWebsite());
+                dto.setDescription(company.getDescription());
+                dto.setLocation(company.getLocation());
+                dto.setAboutUs(company.getAboutUs());
+                dto.setBenefits(company.getBenefits());
+                dto.setCreatedAt(company.getCreatedAt());
+                dto.setUpdatedAt(company.getUpdatedAt());
+
+                // Add logo info
+                try {
+                    FileStorageServiceImpl.LogoInfo logoInfo = 
+                        (FileStorageServiceImpl.LogoInfo) fileStorageService.getCompanyLogoInfo(company.getId());
+                    if (logoInfo != null) {
+                        dto.setLogoFileId(logoInfo.getFileId());
+                        dto.setLogoBase64(logoInfo.getBase64Data());
+                        dto.setLogoContentType(logoInfo.getContentType());
+                        dto.setLogoFileName(logoInfo.getFileName());
+                        dto.setLogoDataUrl(logoInfo.getDataUrl());
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to load logo for company {}: {}", company.getId(), e.getMessage());
+                }
+
+                // Add banner info
+                if (company.getBannerFileId() != null) {
+                    try {
+                        FileStorageServiceImpl.BannerInfo bannerInfo = 
+                            ((FileStorageServiceImpl) fileStorageService).getBannerInfo(company.getBannerFileId());
+                        if (bannerInfo != null) {
+                            dto.setBannerFileId(bannerInfo.getFileId());
+                            dto.setBannerBase64(bannerInfo.getBase64Data());
+                            dto.setBannerContentType(bannerInfo.getContentType());
+                            dto.setBannerFileName(bannerInfo.getFileName());
+                            dto.setBannerDataUrl(bannerInfo.getDataUrl());
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to load banner for company {}: {}", company.getId(), e.getMessage());
+                    }
+                }
+                return dto;
+            })
+            .collect(Collectors.toList());
+}
   
      @Override
     public Optional<Company> findByCompanyUniqueId(String companyUniqueId) {

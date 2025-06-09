@@ -75,12 +75,18 @@ public ResponseEntity<JwtResponseDTO> registerCompany(@Valid @RequestBody Compan
     return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
 }
 
-    // @GetMapping("/{companyUniqueId}")
-    // @Operation(summary = "Get company profile by unique ID")
-    // public ResponseEntity<CompanyDetailDTO> getCompanyProfile(@PathVariable String companyUniqueId) {
-    //     return ResponseEntity.ok(companyService.getCompanyByUniqueId(companyUniqueId));
-    // }
-
+    @GetMapping("/search")
+@Operation(summary = "Search company profile by company name")
+public ResponseEntity<List<CompanyWithMediaDto>> searchCompanyByName(
+        @RequestParam String companyName) {
+    try {
+        List<CompanyWithMediaDto> companies = companyService.searchCompaniesByName(companyName);
+        return ResponseEntity.ok(companies);
+    } catch (Exception e) {
+        log.error("Error searching companies with name {}: {}", companyName, e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
      @GetMapping("/{companyId}")
     @Operation(summary = "Get company profile with logo and banner")
     public ResponseEntity<CompanyWithMediaDto> getCompanyProfile(@PathVariable Long companyId) {

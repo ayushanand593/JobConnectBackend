@@ -17,6 +17,8 @@ public interface CompanyServiceI {
     Optional<Company> findById(Long companyId);
 
    //  CompanyDetailDTO getCompanyByUniqueId(String companyUniqueId);
+
+   List<CompanyWithMediaDto> searchCompaniesByName(String companyName);
   
     User addEmployerToCompany(EmployeeRegistrationDTO dto);
 

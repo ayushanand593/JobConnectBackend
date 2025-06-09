@@ -83,7 +83,9 @@ public class SecurityConfig {
             "https://*.herokuapp.com", // Heroku deployments
             "https://jobconnect.com",  // Your production domain
             "https://*.jobconnect.com",
-             "https://editor.swagger.io" // Subdomains
+             "https://editor.swagger.io", // Subdomains,
+            "https://zclcl1fq-4200.inc1.devtunnels.ms"
+            
         ));
         
         // Allow all HTTP methods

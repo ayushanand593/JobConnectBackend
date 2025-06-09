@@ -8,13 +8,14 @@ import org.springframework.stereotype.Repository;
 import com.dcode.jobconnect.entities.Company;
 import com.dcode.jobconnect.entities.CompanyFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company,Long> {
     Optional<Company> findByCompanyUniqueId(String companyUniqueId);
 
-
+List<Company> findByCompanyNameContainingIgnoreCase(String companyName);
     
 @Modifying
 @Query(value = "DELETE FROM company_admins WHERE company_id = :companyId", nativeQuery = true)
